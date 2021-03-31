@@ -37,8 +37,8 @@ subroutine transpose_x_to_z_real(src, dst, decomp)
 
 #ifdef MPI3
   call MPI_Neighbor_alltoallw( &
-      src,decomp%xcnts_xz(decomp%xranks),decomp%xdispls_xz(decomp%xranks),decomp%xtypes_xzr(decomp%xranks), &
-      dst,decomp%zcnts_xz(decomp%zranks),decomp%zdispls_xz(decomp%zranks),decomp%ztypes_xzr(decomp%zranks), &
+      src,decomp%xcnts_xz(decomp%xranks_xz),decomp%xdispls_xz(decomp%xranks_xz),decomp%xtypes_xzr(decomp%xranks_xz), &
+      dst,decomp%zcnts_xz(decomp%zranks_xz),decomp%zdispls_xz(decomp%zranks_xz),decomp%ztypes_xzr(decomp%zranks_xz), &
       decomp%xtozNeighborComm,ierror)
   if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_NEIGHBOR_ALLTOALLW")
 #else
@@ -76,8 +76,8 @@ subroutine transpose_x_to_z_complex(src, dst, decomp)
 
 #ifdef MPI3
   call MPI_Neighbor_alltoallw( &
-      src,decomp%xcnts_xz(decomp%xranks),decomp%xdispls_xz(decomp%xranks),decomp%xtypes_xzc(decomp%xranks), &
-      dst,decomp%zcnts_xz(decomp%zranks),decomp%zdispls_xz(decomp%zranks),decomp%ztypes_xzc(decomp%zranks), &
+      src,decomp%xcnts_xz(decomp%xranks_xz),decomp%xdispls_xz(decomp%xranks_xz),decomp%xtypes_xzc(decomp%xranks_xz), &
+      dst,decomp%zcnts_xz(decomp%zranks_xz),decomp%zdispls_xz(decomp%zranks_xz),decomp%ztypes_xzc(decomp%zranks_xz), &
       decomp%xtozNeighborComm,ierror)
   if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_NEIGHBOR_ALLTOALLW")
 #else

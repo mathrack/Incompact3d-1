@@ -111,18 +111,19 @@ module decomp_2d
      ! or for padded-alltoall
      integer :: x1count, y1count, y2count, z2count
 
+
      ! buffer counts, displacements and types for MPI_Alltoallw to transform
      ! directly between x- and z-pencils
      integer, allocatable, dimension(:) :: xcnts_xz, xtypes_xzr, xtypes_xzc
      integer, allocatable, dimension(:) :: zcnts_xz, ztypes_xzr, ztypes_xzc
 
 #ifdef MPI3                               
-! use MPI_ADDRESS_KIND for MPI_Neighbor_alltoallw call
+     ! use MPI_ADDRESS_KIND for MPI_Neighbor_alltoallw call
      integer(kind=MPI_ADDRESS_KIND), allocatable, dimension(:) :: xdispls_xz, zdispls_xz
      integer :: xtozNeighborComm, ztoxNeighborComm
-     integer, allocatable, dimension(:) :: xranks, zranks
+     integer, allocatable, dimension(:) :: xranks_xz, zranks_xz
 #else                                     
-! use default integer for MPI_Alltoallw call
+     ! use default integer for MPI_Alltoallw call
      integer, allocatable, dimension(:) :: xdispls_xz, zdispls_xz
 #endif
 
@@ -703,7 +704,7 @@ contains
     deallocate(decomp%xtypes_xzc,decomp%ztypes_xzc)
     deallocate(decomp%xdispls_xz,decomp%zdispls_xz)
 #ifdef MPI3
-    deallocate(decomp%xranks,decomp%zranks)
+    deallocate(decomp%xranks_xz,decomp%zranks_xz)
 #endif
 #ifdef SHM
     deallocate(decomp%x1disp_o,decomp%y1disp_o,decomp%y2disp_o, &
@@ -1302,7 +1303,7 @@ contains
     ! Local variables
     integer :: i, k, rk, rank_x, rank_z, subsize_y, offset_y, ierror
 #ifdef MPI3
-    integer,dimension(nproc) :: xranks, zranks, xweights, zweights
+    integer, dimension(nproc) :: xranks, zranks, xweights, zweights
     integer :: index_src, index_dest
 #endif
 
@@ -1393,6 +1394,9 @@ contains
       !   Y pencil : [x1st(rk),x1en(rk)]x[1,ny]x[z2st(rk),z2en(rk)]
       !   Z pencil : [x1st(rk),x1en(rk)]x[y2st(rk),y2en(rk)]x[1,nz]
       !
+
+      !
+      ! Transpose X => Z and Z => X
       ! No checks on X or Z dimension
       ! Transform from Z into X pencils, so these always overlap
       !
@@ -1448,8 +1452,8 @@ contains
                MPI_ORDER_FORTRAN,real_type,decomp%xtypes_xzr(rk+1),ierror)
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%xtypes_xzr(rk+1),ierror)
-
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+
         call MPI_Type_create_subarray(3,decomp%xsz, &
                (/decomp%x1dist(k),subsize_y,decomp%xsz(3)/), &
                (/decomp%x1st(k)-decomp%xst(1),offset_y,0/), &
@@ -1464,11 +1468,11 @@ contains
     enddo
 
 #ifdef MPI3
-    allocate(decomp%xranks(index_dest))
-    allocate(decomp%zranks(index_src))
+    allocate(decomp%xranks_xz(index_dest))
+    allocate(decomp%zranks_xz(index_src))
 
-    decomp%xranks=xranks(1:index_dest)+1
-    decomp%zranks=zranks(1:index_src)+1
+    decomp%xranks_xz=xranks(1:index_dest)+1
+    decomp%zranks_xz=zranks(1:index_src)+1
 
     call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
       index_src,zranks(1:index_src),zweights(1:index_src), &
