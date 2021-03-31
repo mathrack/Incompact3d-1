@@ -91,6 +91,7 @@ contains
   !############################################################################
   subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
+    use MPI
     use param
     use variables
     use decomp_2d
@@ -114,8 +115,23 @@ contains
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
-
+    ! Local variables
     integer :: i,j,k,is
+
+#ifdef OCC
+    integer :: code, mpi_req(6)
+    integer :: mpi_status(MPI_STATUS_SIZE, 6)
+
+    do i = 1, 6
+      mpi_status(:,i) = MPI_STATUS_IGNORE
+    enddo
+    call transpose_x_to_y_start(ux1,ux2,mpi_req(1))
+    call transpose_x_to_y_start(uy1,uy2,mpi_req(2))
+    call transpose_x_to_y_start(uz1,uz2,mpi_req(3))
+    call transpose_x_to_z_start(ux1,ux3,mpi_req(4))
+    call transpose_x_to_z_start(uy1,uy3,mpi_req(5))
+    call transpose_x_to_z_start(uz1,uz3,mpi_req(6))
+#endif
 
     !SKEW SYMMETRIC FORM
     !WORK X-PENCILS
@@ -156,9 +172,14 @@ contains
        ti1(:,:,:) = ti1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
     endif
 
+#ifdef OCC
+    call MPI_WAITALL(3, mpi_req(1:3), mpi_status(:,1:3), code)
+    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAITALL")
+#else
     call transpose_x_to_y(ux1,ux2)
     call transpose_x_to_y(uy1,uy2)
     call transpose_x_to_y(uz1,uz2)
+#endif
 
     if (ilmn) then
        call transpose_x_to_y(rho1(:,:,:,1),rho2)
@@ -204,9 +225,14 @@ contains
        ti2(:,:,:) = ti2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
     endif
 
+#ifdef OCC
+    call MPI_WAITALL(3, mpi_req(4:6), mpi_status(:,4:6), code)
+    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAITALL")
+#else
     call transpose_y_to_z(ux2,ux3)
     call transpose_y_to_z(uy2,uy3)
     call transpose_y_to_z(uz2,uz3)
+#endif
 
     !WORK Z-PENCILS
     if (ilmn) then
@@ -719,6 +745,7 @@ contains
   !############################################################################
   subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt, is_even, is_skew)
 
+    use MPI
     use param
     use variables
     use decomp_2d
@@ -744,6 +771,13 @@ contains
     logical :: evensc, skewsc
     integer :: i, j, k
     real(mytype) :: xalpha
+
+#ifdef OCC
+    integer :: code, mpi_req(2)
+
+    call transpose_x_to_y_start(phi1,td2,mpi_req(1))
+    call transpose_x_to_z_start(phi1,td3,mpi_req(2))
+#endif
 
     evensc = .true.
     if (present(is_even)) then
@@ -789,7 +823,12 @@ contains
     ! Add convective and diffusive scalar terms of x-pencil
     ta1(:,:,:) = xalpha*ta1(:,:,:) - tb1(:,:,:)
 
+#ifdef OCC
+    call MPI_WAIT(mpi_req(1), MPI_STATUS_IGNORE, code)
+    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAIT")
+#else
     call transpose_x_to_y(phi1(:,:,:),td2(:,:,:))
+#endif
 
     !Y PENCILS
     if (skewsc) tb2(:,:,:) = uy2(:,:,:) * td2(:,:,:)
@@ -853,7 +892,12 @@ contains
     ! Add convective and diffusive scalar terms of y-pencil
     tc2(:,:,:) = xalpha*ta2(:,:,:) - tb2(:,:,:)
 
+#ifdef OCC
+    call MPI_WAIT(mpi_req(2), MPI_STATUS_IGNORE, code)
+    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAIT")
+#else
     call transpose_y_to_z(td2(:,:,:),td3(:,:,:))
+#endif
 
     !Z PENCILS
     if (skewsc) ta3(:,:,:) = uz3(:,:,:) * td3(:,:,:)
