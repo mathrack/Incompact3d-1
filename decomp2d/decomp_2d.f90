@@ -158,10 +158,8 @@ module decomp_2d
        transpose_z_to_y, transpose_y_to_x, &
 #ifdef OCC
        transpose_x_to_y_start, transpose_y_to_z_start, &
+       transpose_x_to_z_start, transpose_z_to_x_start, &
        transpose_z_to_y_start, transpose_y_to_x_start, &
-       transpose_x_to_y_wait, transpose_y_to_z_wait, &
-       transpose_z_to_y_wait, transpose_y_to_x_wait, &
-       transpose_test, &
 #endif
        decomp_info_init, decomp_info_finalize, partition, &
        init_coarser_mesh_statS,fine_to_coarseS,&
@@ -235,43 +233,45 @@ module decomp_2d
 #ifdef OCC
   interface transpose_x_to_y_start
      module procedure transpose_x_to_y_real_start
+     module procedure transpose_x_to_y_real_start_s
      module procedure transpose_x_to_y_complex_start
+     module procedure transpose_x_to_y_complex_start_s
   end interface transpose_x_to_y_start
 
   interface transpose_y_to_z_start
      module procedure transpose_y_to_z_real_start
+     module procedure transpose_y_to_z_real_start_s
      module procedure transpose_y_to_z_complex_start
+     module procedure transpose_y_to_z_complex_start_s
   end interface transpose_y_to_z_start
+
+  interface transpose_x_to_z_start
+     module procedure transpose_x_to_z_real_start
+     module procedure transpose_x_to_z_real_start_s
+     module procedure transpose_x_to_z_complex_start
+     module procedure transpose_x_to_z_complex_start_s
+  end interface transpose_x_to_z_start
+
+  interface transpose_z_to_x_start
+     module procedure transpose_z_to_x_real_start
+     module procedure transpose_z_to_x_real_start_s
+     module procedure transpose_z_to_x_complex_start
+     module procedure transpose_z_to_x_complex_start_s
+  end interface transpose_z_to_x_start
 
   interface transpose_z_to_y_start
      module procedure transpose_z_to_y_real_start
+     module procedure transpose_z_to_y_real_start_s
      module procedure transpose_z_to_y_complex_start
+     module procedure transpose_z_to_y_complex_start_s
   end interface transpose_z_to_y_start
 
   interface transpose_y_to_x_start
      module procedure transpose_y_to_x_real_start
+     module procedure transpose_y_to_x_real_start_s
      module procedure transpose_y_to_x_complex_start
+     module procedure transpose_y_to_x_complex_start_s
   end interface transpose_y_to_x_start
-
-  interface transpose_x_to_y_wait
-     module procedure transpose_x_to_y_real_wait
-     module procedure transpose_x_to_y_complex_wait
-  end interface transpose_x_to_y_wait
-
-  interface transpose_y_to_z_wait
-     module procedure transpose_y_to_z_real_wait
-     module procedure transpose_y_to_z_complex_wait
-  end interface transpose_y_to_z_wait
-
-  interface transpose_z_to_y_wait
-     module procedure transpose_z_to_y_real_wait
-     module procedure transpose_z_to_y_complex_wait
-  end interface transpose_z_to_y_wait
-
-  interface transpose_y_to_x_wait
-     module procedure transpose_y_to_x_real_wait
-     module procedure transpose_y_to_x_complex_wait
-  end interface transpose_y_to_x_wait
 #endif
 
   interface update_halo
@@ -1711,20 +1711,6 @@ contains
 
     return
   end subroutine prepare_buffer
-
-#ifdef OCC
-  ! For non-blocking communication code, progress the comminication stack
-  subroutine transpose_test(handle)
-
-    implicit none
-
-    integer :: handle, ierror
-
-    call NBC_TEST(handle,ierror)
-
-    return
-  end subroutine transpose_test
-#endif
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
