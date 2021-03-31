@@ -116,15 +116,35 @@ module decomp_2d
      ! directly between x- and z-pencils
      integer, allocatable, dimension(:) :: xcnts_xz, xtypes_xzr, xtypes_xzc
      integer, allocatable, dimension(:) :: zcnts_xz, ztypes_xzr, ztypes_xzc
+     ! directly between x- and y-pencils
+     integer, allocatable, dimension(:) :: xcnts_xy, xtypes_xyr, xtypes_xyc
+     integer, allocatable, dimension(:) :: zcnts_xy, ztypes_xyr, ztypes_xyc
+     ! directly between y- and z-pencils
+     integer, allocatable, dimension(:) :: xcnts_yz, xtypes_yzr, xtypes_yzc
+     integer, allocatable, dimension(:) :: zcnts_yz, ztypes_yzr, ztypes_yzc
 
 #ifdef MPI3                               
      ! use MPI_ADDRESS_KIND for MPI_Neighbor_alltoallw call
+     ! x <=> z transpose
      integer(kind=MPI_ADDRESS_KIND), allocatable, dimension(:) :: xdispls_xz, zdispls_xz
      integer :: xtozNeighborComm, ztoxNeighborComm
      integer, allocatable, dimension(:) :: xranks_xz, zranks_xz
+     ! x <=> y transpose
+     integer(kind=MPI_ADDRESS_KIND), allocatable, dimension(:) :: xdispls_xy, zdispls_xy
+     integer :: xtoyNeighborComm, ytoxNeighborComm
+     integer, allocatable, dimension(:) :: xranks_xy, zranks_xy
+     ! y <=> z transpose
+     integer(kind=MPI_ADDRESS_KIND), allocatable, dimension(:) :: xdispls_yz, zdispls_yz
+     integer :: ytozNeighborComm, ztoyNeighborComm
+     integer, allocatable, dimension(:) :: xranks_yz, zranks_yz
 #else                                     
      ! use default integer for MPI_Alltoallw call
+     ! x <=> z transpose
      integer, allocatable, dimension(:) :: xdispls_xz, zdispls_xz
+     ! x <=> y transpose
+     integer, allocatable, dimension(:) :: xdispls_xy, zdispls_xy
+     ! y <=> z transpose
+     integer, allocatable, dimension(:) :: xdispls_yz, zdispls_yz
 #endif
 
      ! evenly distributed data
@@ -598,10 +618,22 @@ contains
     allocate(decomp%x1disp(0:dims(1)-1),decomp%y1disp(0:dims(1)-1), &
              decomp%y2disp(0:dims(2)-1),decomp%z2disp(0:dims(2)-1))
     ! allocate arrays for MPI_ALLTOALLW calls
+    ! x <=> z transpose
     allocate(decomp%xcnts_xz(nproc),decomp%zcnts_xz(nproc))
     allocate(decomp%xtypes_xzr(nproc),decomp%ztypes_xzr(nproc))
     allocate(decomp%xtypes_xzc(nproc),decomp%ztypes_xzc(nproc))
     allocate(decomp%xdispls_xz(nproc),decomp%zdispls_xz(nproc))
+    ! x <=> y transpose
+    allocate(decomp%xcnts_xy(nproc),decomp%zcnts_xy(nproc))
+    allocate(decomp%xtypes_xyr(nproc),decomp%ztypes_xyr(nproc))
+    allocate(decomp%xtypes_xyc(nproc),decomp%ztypes_xyc(nproc))
+    allocate(decomp%xdispls_xy(nproc),decomp%zdispls_xy(nproc))
+    ! y <=> z transpose
+    allocate(decomp%xcnts_yz(nproc),decomp%zcnts_yz(nproc))
+    allocate(decomp%xtypes_yzr(nproc),decomp%ztypes_yzr(nproc))
+    allocate(decomp%xtypes_yzc(nproc),decomp%ztypes_yzc(nproc))
+    allocate(decomp%xdispls_yz(nproc),decomp%zdispls_yz(nproc))
+    !
     call prepare_buffer(decomp)
 
 #ifdef SHM
@@ -681,8 +713,13 @@ contains
     deallocate(decomp%x1disp,decomp%y1disp)
     deallocate(decomp%y2disp,decomp%z2disp)
 
+    ! *cnts_*
     deallocate(decomp%xcnts_xz,decomp%zcnts_xz)
+    deallocate(decomp%xcnts_xy,decomp%zcnts_xy)
+    deallocate(decomp%xcnts_yz,decomp%zcnts_yz)
+    ! *types_*(1:nproc)
     do i = 1, nproc
+      ! XZ
       if (decomp%xtypes_xzr(i).ne.MPI_INTEGER) then
         call MPI_Type_free(decomp%xtypes_xzr(i),ierror)
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
@@ -699,12 +736,73 @@ contains
         call MPI_Type_free(decomp%ztypes_xzc(i),ierror)
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
       endif
+      ! XY
+      if (decomp%xtypes_xyr(i).ne.MPI_INTEGER) then
+        call MPI_Type_free(decomp%xtypes_xyr(i),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+      endif
+      if (decomp%ztypes_xyr(i).ne.MPI_INTEGER) then
+        call MPI_Type_free(decomp%ztypes_xyr(i),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+      endif
+      if (decomp%xtypes_xyc(i).ne.MPI_INTEGER) then
+        call MPI_Type_free(decomp%xtypes_xyc(i),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+      endif
+      if (decomp%ztypes_xyc(i).ne.MPI_INTEGER) then
+        call MPI_Type_free(decomp%ztypes_xyc(i),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+      endif
+      ! YZ
+      if (decomp%xtypes_yzr(i).ne.MPI_INTEGER) then
+        call MPI_Type_free(decomp%xtypes_yzr(i),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+      endif
+      if (decomp%ztypes_yzr(i).ne.MPI_INTEGER) then                       
+        call MPI_Type_free(decomp%ztypes_yzr(i),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+      endif
+      if (decomp%xtypes_yzc(i).ne.MPI_INTEGER) then
+        call MPI_Type_free(decomp%xtypes_yzc(i),ierror)                      
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+      endif
+      if (decomp%ztypes_yzc(i).ne.MPI_INTEGER) then                        
+        call MPI_Type_free(decomp%ztypes_yzc(i),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+      endif
     enddo
+    ! *types_*r
     deallocate(decomp%xtypes_xzr,decomp%ztypes_xzr)
+    deallocate(decomp%xtypes_xyr,decomp%ztypes_xyr)
+    deallocate(decomp%xtypes_yzr,decomp%ztypes_yzr)
+    ! *types_*c
     deallocate(decomp%xtypes_xzc,decomp%ztypes_xzc)
+    deallocate(decomp%xtypes_xyc,decomp%ztypes_xyc)
+    deallocate(decomp%xtypes_yzc,decomp%ztypes_yzc)
+    ! *displs_*
     deallocate(decomp%xdispls_xz,decomp%zdispls_xz)
+    deallocate(decomp%xdispls_xy,decomp%zdispls_xy)
+    deallocate(decomp%xdispls_yz,decomp%zdispls_yz)
 #ifdef MPI3
+    ! *ranks_*
     deallocate(decomp%xranks_xz,decomp%zranks_xz)
+    deallocate(decomp%xranks_xy,decomp%zranks_xy)
+    deallocate(decomp%xranks_yz,decomp%zranks_yz)
+    ! x <=> z
+    call MPI_COMM_FREE(decomp%xtozNeighborComm,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    call MPI_COMM_FREE(decomp%ztoxNeighborComm,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    ! x <=> y
+    call MPI_COMM_FREE(decomp%xtoyNeighborComm,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    call MPI_COMM_FREE(decomp%ytoxNeighborComm,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    ! y <=> z
+    call MPI_COMM_FREE(decomp%ytozNeighborComm,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    call MPI_COMM_FREE(decomp%ztoyNeighborComm,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
 #endif
 #ifdef SHM
     deallocate(decomp%x1disp_o,decomp%y1disp_o,decomp%y2disp_o, &
@@ -1301,7 +1399,8 @@ contains
     TYPE(DECOMP_INFO), intent(INOUT) :: decomp
 
     ! Local variables
-    integer :: i, k, rk, rank_x, rank_z, subsize_y, offset_y, ierror
+    integer :: i, k, rk, rank_x, rank_z, subsize, offset, ierror
+    integer, dimension(2) :: coord
 #ifdef MPI3
     integer, dimension(nproc) :: xranks, zranks, xweights, zweights
     integer :: index_src, index_dest
@@ -1353,7 +1452,8 @@ contains
                      decomp%z2dist(dims(2)-1) * decomp%zsz(1)
     decomp%z2count = decomp%y2count
 
-    ! Information for MPI_Alltoallw for complex X <=> Z transposes
+    ! Information for MPI_Alltoallw
+    ! x <=> z transpose
     decomp%xdispls_xz(:)=0
     decomp%zdispls_xz(:)=0
     decomp%xcnts_xz(:)=0
@@ -1362,7 +1462,31 @@ contains
     decomp%ztypes_xzr(:)=MPI_INTEGER
     decomp%xtypes_xzc(:)=MPI_INTEGER
     decomp%ztypes_xzc(:)=MPI_INTEGER
+    ! x <=> y transpose
+    decomp%xdispls_xy(:)=0
+    decomp%zdispls_xy(:)=0
+    decomp%xcnts_xy(:)=0                                                                                 
+    decomp%zcnts_xy(:)=0
+    decomp%xtypes_xyr(:)=MPI_INTEGER
+    decomp%ztypes_xyr(:)=MPI_INTEGER
+    decomp%xtypes_xyc(:)=MPI_INTEGER                                                                     
+    decomp%ztypes_xyc(:)=MPI_INTEGER
+    ! y <=> z transpose
+    decomp%xdispls_yz(:)=0
+    decomp%zdispls_yz(:)=0
+    decomp%xcnts_yz(:)=0
+    decomp%zcnts_yz(:)=0
+    decomp%xtypes_yzr(:)=MPI_INTEGER
+    decomp%ztypes_yzr(:)=MPI_INTEGER
+    decomp%xtypes_yzc(:)=MPI_INTEGER
+    decomp%ztypes_yzc(:)=MPI_INTEGER
+
+    ! Init local variables (x <=> z transpose)
 #ifdef MPI3
+    xranks(:) = 0
+    zranks(:) = 0
+    xweights(:) = 0
+    zweights(:) = 0
     index_src=0
     index_dest=0
 #endif
@@ -1396,7 +1520,7 @@ contains
       !
 
       !
-      ! Transpose X => Z and Z => X
+      ! Transpose X <=> Z
       ! No checks on X or Z dimension
       ! Transform from Z into X pencils, so these always overlap
       !
@@ -1404,27 +1528,34 @@ contains
       if (decomp%zst(2).le.decomp%y1en(k) .and. &
           decomp%zen(2).ge.decomp%y1st(k)) then
 
+        ! Safety check
+        if (decomp%ztypes_xzr(rk+1).ne.MPI_INTEGER .or. &
+            decomp%ztypes_xzc(rk+1).ne.MPI_INTEGER) then
+          print *, "Rank ", nrank, " : error in prepare_buffer." 
+          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+        endif
+
         decomp%zcnts_xz(rk+1)=1
-        subsize_y=min(decomp%zen(2),decomp%y1en(k))-max(decomp%zst(2),decomp%y1st(k))+1
-        offset_y =max(decomp%zst(2),decomp%y1st(k))-decomp%zst(2)
+        subsize=min(decomp%zen(2),decomp%y1en(k))-max(decomp%zst(2),decomp%y1st(k))+1
+        offset =max(decomp%zst(2),decomp%y1st(k))-decomp%zst(2)
 
 #ifdef MPI3
         index_src=index_src+1
         zranks(index_src)=rk
-        zweights(index_src)=decomp%zsz(1)*subsize_y*decomp%z2dist(i)
+        zweights(index_src)=decomp%zsz(1)*subsize*decomp%z2dist(i)
 #endif
 
         call MPI_Type_create_subarray(3,decomp%zsz, &
-               (/decomp%zsz(1),subsize_y,decomp%z2dist(i)/), &
-               (/0,offset_y,decomp%z2st(i)-decomp%zst(3)/), &
+               (/decomp%zsz(1),subsize,decomp%z2dist(i)/), &
+               (/0,offset,decomp%z2st(i)-decomp%zst(3)/), &
                MPI_ORDER_FORTRAN,real_type,decomp%ztypes_xzr(rk+1),ierror)
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%ztypes_xzr(rk+1),ierror)
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
 
         call MPI_Type_create_subarray(3,decomp%zsz, &
-               (/decomp%zsz(1),subsize_y,decomp%z2dist(i)/), &
-               (/0,offset_y,decomp%z2st(i)-decomp%zst(3)/), &
+               (/decomp%zsz(1),subsize,decomp%z2dist(i)/), &
+               (/0,offset,decomp%z2st(i)-decomp%zst(3)/), &
                MPI_ORDER_FORTRAN,complex_type,decomp%ztypes_xzc(rk+1),ierror)
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%ztypes_xzc(rk+1),ierror)
@@ -1436,27 +1567,34 @@ contains
       if (decomp%xst(2).le.decomp%y2en(i) .and. &
           decomp%xen(2).ge.decomp%y2st(i)) then
 
+        ! Safety check
+        if (decomp%xtypes_xzr(rk+1).ne.MPI_INTEGER .or. &
+            decomp%xtypes_xzc(rk+1).ne.MPI_INTEGER) then
+          print *, "Rank ", nrank, " : error in prepare_buffer."
+          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+        endif
+
         decomp%xcnts_xz(rk+1)=1
-        subsize_y=min(decomp%xen(2),decomp%y2en(i))-max(decomp%xst(2),decomp%y2st(i))+1
-        offset_y =max(decomp%xst(2),decomp%y2st(i))-decomp%xst(2)
+        subsize=min(decomp%xen(2),decomp%y2en(i))-max(decomp%xst(2),decomp%y2st(i))+1
+        offset =max(decomp%xst(2),decomp%y2st(i))-decomp%xst(2)
 
 #ifdef MPI3
         index_dest=index_dest+1
         xranks(index_dest)=rk
-        xweights(index_dest)=decomp%x1dist(k)*subsize_y*decomp%xsz(3)
+        xweights(index_dest)=decomp%x1dist(k)*subsize*decomp%xsz(3)
 #endif
 
         call MPI_Type_create_subarray(3,decomp%xsz, &
-               (/decomp%x1dist(k),subsize_y,decomp%xsz(3)/), &
-               (/decomp%x1st(k)-decomp%xst(1),offset_y,0/), &
+               (/decomp%x1dist(k),subsize,decomp%xsz(3)/), &
+               (/decomp%x1st(k)-decomp%xst(1),offset,0/), &
                MPI_ORDER_FORTRAN,real_type,decomp%xtypes_xzr(rk+1),ierror)
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%xtypes_xzr(rk+1),ierror)
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
 
         call MPI_Type_create_subarray(3,decomp%xsz, &
-               (/decomp%x1dist(k),subsize_y,decomp%xsz(3)/), &
-               (/decomp%x1st(k)-decomp%xst(1),offset_y,0/), &
+               (/decomp%x1dist(k),subsize,decomp%xsz(3)/), &
+               (/decomp%x1st(k)-decomp%xst(1),offset,0/), &
                MPI_ORDER_FORTRAN,complex_type,decomp%xtypes_xzc(rk+1),ierror)
         if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%xtypes_xzc(rk+1),ierror)
@@ -1482,6 +1620,270 @@ contains
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       index_src,zranks(1:index_src),zweights(1:index_src), &
       MPI_INFO_NULL,.true.,decomp%ztoxNeighborComm,ierror)
+#endif
+
+    ! Init local variables (x <=> y transpose)
+#ifdef MPI3
+    xranks(:) = 0
+    zranks(:) = 0
+    xweights(:) = 0
+    zweights(:) = 0
+    index_src=0
+    index_dest=0
+#endif
+
+    call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+    i = coord(2)
+    do k=0,dims(1)-1
+
+      ! Get rank_x and rank_z
+      call MPI_Cart_rank(DECOMP_2D_COMM_CART_X,(/k,i/),rk,ierror)
+      if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_RANK")
+
+      !
+      ! Local data
+      !   X pencil : [1,nx]x[xst(2),xen(2)]x[xst(3),xen(3)]
+      !   Y pencil : [yst(1),yen(1)]x[1,ny]x[yst(3),yen(3)]
+      !   Z pencil : [zst(1),zen(1)]x[zst(2),zen(2)]x[1,nz]
+      ! Remote data on CPU rk located at (k,i)
+      !   X pencil : [1,nx]x[y1st(rk),y1en(rk)]x[z2st(rk),z2en(rk)]
+      !   Y pencil : [x1st(rk),x1en(rk)]x[1,ny]x[z2st(rk),z2en(rk)]
+      !   Z pencil : [x1st(rk),x1en(rk)]x[y2st(rk),y2en(rk)]x[1,nz]
+      !
+
+      !
+      ! Transpose X <=> Y
+      ! No checks on X or Y dimension
+      ! Transform from Y into X pencils, so these always overlap
+      !
+      ! First define the MPI subarray for Y pencil
+      if (decomp%yst(3).le.decomp%z2en(i) .and. &
+          decomp%yen(3).ge.decomp%z2st(i)) then
+
+        ! Safety check
+        if (decomp%ztypes_xyr(rk+1).ne.MPI_INTEGER .or. &
+            decomp%ztypes_xyc(rk+1).ne.MPI_INTEGER) then
+          print *, "Rank ", nrank, " : error in prepare_buffer."
+          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+        endif
+
+        decomp%zcnts_xy(rk+1)=1
+        subsize=min(decomp%yen(3),decomp%z2en(i))-max(decomp%yst(3),decomp%z2st(i))+1
+        offset =max(decomp%yst(3),decomp%z2st(i))-decomp%yst(3)
+
+#ifdef MPI3
+        index_src=index_src+1
+        zranks(index_src)=rk
+        zweights(index_src)=decomp%ysz(1)*decomp%y1dist(k)*subsize
+#endif
+
+        call MPI_Type_create_subarray(3,decomp%ysz, &
+               (/decomp%ysz(1),decomp%y1dist(k),subsize/), &
+               (/0,decomp%y1st(k)-decomp%yst(2),offset/), &
+               MPI_ORDER_FORTRAN,real_type,decomp%ztypes_xyr(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        call MPI_Type_commit(decomp%ztypes_xyr(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+
+        call MPI_Type_create_subarray(3,decomp%ysz, &
+               (/decomp%ysz(1),decomp%y1dist(k),subsize/), &
+               (/0,decomp%y1st(k)-decomp%yst(2),offset/), &
+               MPI_ORDER_FORTRAN,complex_type,decomp%ztypes_xyc(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        call MPI_Type_commit(decomp%ztypes_xyc(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+
+      endif
+
+      ! Then define the MPI subarray for X pencil
+      if (decomp%xst(3).le.decomp%z2en(i) .and. &
+          decomp%xen(3).ge.decomp%z2st(i)) then
+
+        ! Safety check
+        if (decomp%xtypes_xyr(rk+1).ne.MPI_INTEGER .or. &
+            decomp%xtypes_xyc(rk+1).ne.MPI_INTEGER) then
+          print *, "Rank ", nrank, " : error in prepare_buffer."
+          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+        endif
+
+        decomp%xcnts_xy(rk+1)=1
+        subsize=min(decomp%xen(3),decomp%z2en(i))-max(decomp%xst(3),decomp%z2st(i))+1
+        offset =max(decomp%xst(3),decomp%z2st(i))-decomp%xst(3)
+
+#ifdef MPI3
+        index_dest=index_dest+1
+        xranks(index_dest)=rk
+        xweights(index_dest)=decomp%x1dist(k)*decomp%xsz(2)*subsize
+#endif
+
+        call MPI_Type_create_subarray(3,decomp%xsz, &
+               (/decomp%x1dist(k),decomp%xsz(2),subsize/), &
+               (/decomp%x1st(k)-decomp%xst(1),0,offset/), &
+               MPI_ORDER_FORTRAN,real_type,decomp%xtypes_xyr(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        call MPI_Type_commit(decomp%xtypes_xyr(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+
+        call MPI_Type_create_subarray(3,decomp%xsz, &
+               (/decomp%x1dist(k),decomp%xsz(2),subsize/), &
+               (/decomp%x1st(k)-decomp%xst(1),0,offset/), &
+               MPI_ORDER_FORTRAN,complex_type,decomp%xtypes_xyc(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        call MPI_Type_commit(decomp%xtypes_xyc(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+
+      endif
+
+    enddo
+
+#ifdef MPI3
+    allocate(decomp%xranks_xy(index_dest))
+    allocate(decomp%zranks_xy(index_src))
+
+    decomp%xranks_xy=xranks(1:index_dest)+1
+    decomp%zranks_xy=zranks(1:index_src)+1
+
+    call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
+      index_src,zranks(1:index_src),zweights(1:index_src), &
+      index_dest,xranks(1:index_dest),xweights(1:index_dest), &
+      MPI_INFO_NULL,.true.,decomp%xtoyNeighborComm,ierror)
+    call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
+      index_dest,xranks(1:index_dest),xweights(1:index_dest), &
+      index_src,zranks(1:index_src),zweights(1:index_src), &
+      MPI_INFO_NULL,.true.,decomp%ytoxNeighborComm,ierror)
+#endif
+
+    ! Init local variables (y <=> z transpose)
+#ifdef MPI3
+    xranks(:) = 0
+    zranks(:) = 0
+    xweights(:) = 0
+    zweights(:) = 0
+    index_src=0
+    index_dest=0
+#endif
+      
+    call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
+    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+    k = coord(1)
+    do i=0,dims(2)-1
+
+      ! Get rank_x and rank_z
+      call MPI_Cart_rank(DECOMP_2D_COMM_CART_X,(/k,i/),rk,ierror)
+      if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_RANK")
+
+      !   
+      ! Local data
+      !   X pencil : [1,nx]x[xst(2),xen(2)]x[xst(3),xen(3)]
+      !   Y pencil : [yst(1),yen(1)]x[1,ny]x[yst(3),yen(3)]
+      !   Z pencil : [zst(1),zen(1)]x[zst(2),zen(2)]x[1,nz]
+      ! Remote data on CPU rk located at (k,i)
+      !   X pencil : [1,nx]x[y1st(rk),y1en(rk)]x[z2st(rk),z2en(rk)]
+      !   Y pencil : [x1st(rk),x1en(rk)]x[1,ny]x[z2st(rk),z2en(rk)]
+      !   Z pencil : [x1st(rk),x1en(rk)]x[y2st(rk),y2en(rk)]x[1,nz]
+      !
+
+      !
+      ! Transpose Y <=> Z
+      ! No checks on Y or Z dimension
+      ! Transform from Y into Z pencils, so these always overlap
+      !
+      ! First define the MPI subarray for Z pencil
+      if (decomp%zst(1).le.decomp%x1en(k) .and. &
+          decomp%zen(1).ge.decomp%x1st(k)) then
+
+        ! Safety check
+        if (decomp%ztypes_yzr(rk+1).ne.MPI_INTEGER .or. &
+            decomp%ztypes_yzc(rk+1).ne.MPI_INTEGER) then
+          print *, "Rank ", nrank, " : error in prepare_buffer." 
+          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+        endif
+
+        decomp%zcnts_yz(rk+1)=1
+        subsize=min(decomp%zen(1),decomp%x1en(k))-max(decomp%zst(1),decomp%x1st(k))+1
+        offset =max(decomp%zst(1),decomp%x1st(k))-decomp%zst(1)
+
+#ifdef MPI3
+        index_src=index_src+1
+        zranks(index_src)=rk
+        zweights(index_src)=subsize*decomp%zsz(2)*decomp%z2dist(i)
+#endif
+
+        call MPI_Type_create_subarray(3,decomp%zsz, &
+               (/subsize,decomp%zsz(2),decomp%z2dist(i)/), &
+               (/offset,0,decomp%z2st(i)-decomp%zst(3)/), &
+               MPI_ORDER_FORTRAN,real_type,decomp%ztypes_yzr(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        call MPI_Type_commit(decomp%ztypes_yzr(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+
+        call MPI_Type_create_subarray(3,decomp%zsz, &
+               (/subsize,decomp%zsz(2),decomp%z2dist(i)/), &
+               (/offset,0,decomp%z2st(i)-decomp%zst(3)/), &
+               MPI_ORDER_FORTRAN,complex_type,decomp%ztypes_yzc(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        call MPI_Type_commit(decomp%ztypes_yzc(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+
+      endif
+
+      ! Then define the MPI subarray for Y pencil
+      if (decomp%yst(1).le.decomp%x1en(k) .and. &
+          decomp%yen(1).ge.decomp%x1st(k)) then
+
+        ! Safety check
+        if (decomp%xtypes_yzr(rk+1).ne.MPI_INTEGER .or. &
+            decomp%xtypes_yzc(rk+1).ne.MPI_INTEGER) then
+          print *, "Rank ", nrank, " : error in prepare_buffer."
+          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+        endif
+
+        decomp%xcnts_yz(rk+1)=1
+        subsize=min(decomp%yen(1),decomp%x1en(k))-max(decomp%yst(1),decomp%x1st(k))+1
+        offset =max(decomp%yst(1),decomp%x1st(k))-decomp%yst(1)
+
+#ifdef MPI3
+        index_dest=index_dest+1
+        xranks(index_dest)=rk
+        xweights(index_dest)=subsize*decomp%y2dist(i)*decomp%xsz(3)
+#endif
+
+        call MPI_Type_create_subarray(3,decomp%ysz, &
+               (/subsize,decomp%y2dist(i),decomp%xsz(3)/), &
+               (/offset,decomp%y2st(i)-decomp%yst(2),0/), &
+               MPI_ORDER_FORTRAN,real_type,decomp%xtypes_yzr(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        call MPI_Type_commit(decomp%xtypes_yzr(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+
+        call MPI_Type_create_subarray(3,decomp%ysz, &
+               (/subsize,decomp%y2dist(i),decomp%xsz(3)/), &
+               (/offset,decomp%y2st(i)-decomp%yst(2),0/), &
+               MPI_ORDER_FORTRAN,complex_type,decomp%xtypes_yzc(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        call MPI_Type_commit(decomp%xtypes_yzc(rk+1),ierror)
+        if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+
+      endif
+
+    enddo
+
+#ifdef MPI3
+    allocate(decomp%xranks_yz(index_dest))
+    allocate(decomp%zranks_yz(index_src))
+
+    decomp%xranks_yz=xranks(1:index_dest)+1
+    decomp%zranks_yz=zranks(1:index_src)+1
+
+    call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
+      index_src,zranks(1:index_src),zweights(1:index_src), &
+      index_dest,xranks(1:index_dest),xweights(1:index_dest), &
+      MPI_INFO_NULL,.true.,decomp%ytozNeighborComm,ierror)
+    call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
+      index_dest,xranks(1:index_dest),xweights(1:index_dest), &
+      index_src,zranks(1:index_src),zweights(1:index_src), &
+      MPI_INFO_NULL,.true.,decomp%ztoyNeighborComm,ierror)
 #endif
 
     return
