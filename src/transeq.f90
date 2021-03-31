@@ -288,23 +288,47 @@ contains
 
     !DIFFUSIVE TERMS IN Z
     call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-    call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-    call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
-
     ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
     if (ilmn) then
       td3(:,:,:) = mu3(:,:,:) * xnu*ta3(:,:,:) - half * td3(:,:,:)
-      te3(:,:,:) = mu3(:,:,:) * xnu*tb3(:,:,:) - half * te3(:,:,:)
-      tf3(:,:,:) = mu3(:,:,:) * xnu*tc3(:,:,:) - half * tf3(:,:,:)
     else
       td3(:,:,:) = xnu*ta3(:,:,:) - half * td3(:,:,:)
+    endif
+    !WORK Y-PENCILS
+#ifdef OCC
+    call transpose_z_to_y_start(td3,td2,mpi_req(1))
+#else
+    call transpose_z_to_y(td3,td2)
+#endif
+
+    !DIFFUSIVE TERMS IN Z
+    call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
+    if (ilmn) then
+      te3(:,:,:) = mu3(:,:,:) * xnu*tb3(:,:,:) - half * te3(:,:,:)
+    else
       te3(:,:,:) = xnu*tb3(:,:,:) - half * te3(:,:,:)
+    endif
+    !WORK Y-PENCILS
+#ifdef OCC
+    call transpose_z_to_y_start(te3,te2,mpi_req(2))
+#else
+    call transpose_z_to_y(te3,te2)
+#endif
+
+    !DIFFUSIVE TERMS IN Z
+    call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+    ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
+    if (ilmn) then
+      tf3(:,:,:) = mu3(:,:,:) * xnu*tc3(:,:,:) - half * tf3(:,:,:)
+    else
       tf3(:,:,:) = xnu*tc3(:,:,:) - half * tf3(:,:,:)
     endif
-
     !WORK Y-PENCILS
-    call transpose_z_to_y(td3,td2)
-    call transpose_z_to_y(te3,te2)
+#ifdef OCC
+    call MPI_WAITALL(2, mpi_req(1:2), mpi_status(:,1:2), code)
+    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAITALL")
+#endif
     call transpose_z_to_y(tf3,tf2)
 
     ! Convective terms of y-pencil (tg2,th2,ti2) and sum of convective and diffusive terms of z-pencil (td2,te2,tf2) are now in tg2, th2, ti2 (half for skew-symmetric)
