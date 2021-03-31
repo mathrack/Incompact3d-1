@@ -28,10 +28,7 @@ wk = var
 else if (ipencil==2) then
 call transpose_y_to_x(var,wk,decomp)
 else if (ipencil==3) then
-allocate(wk2(decomp%ysz(1),decomp%ysz(2),decomp%ysz(3)))
-call transpose_z_to_y(var,wk2,decomp)
-call transpose_y_to_x(wk2,wk,decomp)
-deallocate(wk2)
+call transpose_z_to_x(var,wk,decomp)
 end if
 allocate(wk2d(1,decomp%xsz(2),decomp%xsz(3)))
 if (n.ge.1) then
@@ -93,10 +90,7 @@ starts(3) = decomp%yst(3)-1
 else if (iplane==3) then
 allocate(wk(decomp%zsz(1),decomp%zsz(2),decomp%zsz(3)))
 if (ipencil==1) then
-allocate(wk2(decomp%ysz(1),decomp%ysz(2),decomp%ysz(3)))
-call transpose_x_to_y(var,wk2,decomp)
-call transpose_y_to_z(wk2,wk,decomp)
-deallocate(wk2)
+call transpose_x_to_z(var,wk,decomp)
 else if (ipencil==2) then
 call transpose_y_to_z(var,wk,decomp)
 else if (ipencil==3) then
