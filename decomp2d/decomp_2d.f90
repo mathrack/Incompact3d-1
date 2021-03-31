@@ -63,28 +63,6 @@ module decomp_2d
   ! flags for periodic condition in three dimensions
   logical, save :: periodic_x, periodic_y, periodic_z
 
-#ifdef SHM
-  ! derived type to store shared-memory info
-  TYPE, public :: SMP_INFO
-     integer MPI_COMM          ! SMP associated with this communicator
-     integer NODE_ME           ! rank in this communicator
-     integer NCPU              ! size of this communicator
-     integer SMP_COMM          ! communicator for SMP-node masters
-     integer CORE_COMM         ! communicator for cores on SMP-node
-     integer SMP_ME            ! SMP-node id starting from 1 ... NSMP
-     integer NSMP              ! number of SMP-nodes in this communicator
-     integer CORE_ME           ! core id starting from 1 ... NCORE
-     integer NCORE             ! number of cores on this SMP-node
-     integer MAXCORE           ! maximum no. cores on any SMP-node
-     integer N_SND             ! size of SMP shared memory buffer
-     integer N_RCV             ! size of SMP shared memory buffer
-     integer(8) SND_P          ! SNDBUF address (cray pointer), for real 
-     integer(8) RCV_P          ! RCVBUF address (cray pointer), for real
-     integer(8) SND_P_c        ! for complex
-     integer(8) RCV_P_c        ! for complex
-  END TYPE SMP_INFO
-#endif
-
   ! derived type to store decomposition info for a given global data size
   TYPE, public :: DECOMP_INFO
      ! staring/ending index and size of data held by current processor
@@ -150,22 +128,6 @@ module decomp_2d
      ! evenly distributed data
      logical :: even
 
-#ifdef SHM
-     ! For shared-memory implementation
-
-     ! one instance of this derived type for each communicator
-     ! shared moemory info, such as which MPI rank belongs to which node
-     TYPE(SMP_INFO) :: ROW_INFO, COL_INFO
-
-     ! shared send/recv buffers for ALLTOALLV
-     integer, allocatable, dimension(:) :: x1cnts_s, y1cnts_s, &
-                                           y2cnts_s, z2cnts_s
-     integer, allocatable, dimension(:) :: x1disp_s, y1disp_s, &
-                                           y2disp_s, z2disp_s
-     ! A copy of original buffer displacement (will be overwriten)
-     integer, allocatable, dimension(:) :: x1disp_o, y1disp_o, &
-                                           y2disp_o, z2disp_o
-#endif
   END TYPE DECOMP_INFO
 
   ! main (default) decomposition information for global size nx*ny*nz
@@ -177,11 +139,6 @@ module decomp_2d
   integer, save, dimension(3), public :: xstart, xend, xsize  ! x-pencil
   integer, save, dimension(3), public :: ystart, yend, ysize  ! y-pencil
   integer, save, dimension(3), public :: zstart, zend, zsize  ! z-pencil
-
-  ! These are the buffers used by MPI_ALLTOALL(V) calls
-  integer, save :: decomp_buf_size = 0
-  real(mytype),    allocatable, dimension(:) :: work1_r, work2_r
-  complex(mytype), allocatable, dimension(:) :: work1_c, work2_c
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! To define smaller arrays using every several mesh points
@@ -339,23 +296,6 @@ module decomp_2d
 
 contains
 
-#ifdef SHM_DEBUG
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! For debugging, print the shared-memory structure
-  subroutine print_smp_info(s)
-    TYPE(SMP_INFO) :: s
-    write(10,*) 'size of current communicator:', s%NCPU
-    write(10,*) 'rank in current communicator:', s%NODE_ME
-    write(10,*) 'number of SMP-nodes in this communicator:', s%NSMP
-    write(10,*) 'SMP-node id (1 ~ NSMP):', s%SMP_ME
-    write(10,*) 'NCORE - number of cores on this SMP-node', s%NCORE
-    write(10,*) 'core id (1 ~ NCORE):', s%CORE_ME
-    write(10,*) 'maximum no. cores on any SMP-node:', s%MAXCORE
-    write(10,*) 'size of SMP shared memory SND buffer:', s%N_SND
-    write(10,*) 'size of SMP shared memory RCV buffer:', s%N_RCV
-  end subroutine print_smp_info
-#endif
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Routine to be called by applications to initialise this library
   !   INPUT:
@@ -373,10 +313,6 @@ contains
     logical, dimension(3), intent(IN), optional :: periodic_bc
 
     integer :: errorcode, ierror, row, col
-
-#ifdef SHM_DEBUG
-    character(len=80) fname
-#endif
 
     nx_global = nx
     ny_global = ny
@@ -461,70 +397,11 @@ contains
     ysize  = decomp_main%ysz
     zsize  = decomp_main%zsz
 
-#ifdef SHM_DEBUG
-    ! print out shared-memory information
-    write(fname,99) nrank
-99  format('log',I2.2)
-    open(10,file=fname)
-    write(10,*)'I am mpi rank ', nrank, 'Total ranks ', nproc
-    write(10,*)' '
-    write(10,*)'Global data size:'
-    write(10,*)'nx*ny*nz', nx,ny,nz
-    write(10,*)' '
-    write(10,*)'2D processor grid:'
-    write(10,*)'p_row*p_col:', dims(1), dims(2)
-    write(10,*)' '
-    write(10,*)'Portion of global data held locally:'
-    write(10,*)'xsize:',xsize
-    write(10,*)'ysize:',ysize
-    write(10,*)'zsize:',zsize
-    write(10,*)' '
-    write(10,*)'How pensils are to be divided and sent in alltoallv:'
-    write(10,*)'x1dist:',decomp_main%x1dist
-    write(10,*)'y1dist:',decomp_main%y1dist
-    write(10,*)'y2dist:',decomp_main%y2dist
-    write(10,*)'z2dist:',decomp_main%z2dist
-    write(10,*)' '
-    write(10,*)'######Shared buffer set up after this point######'
-    write(10,*)' '
-    write(10,*) 'col communicator detais:'
-    call print_smp_info(decomp_main%COL_INFO)
-    write(10,*)' '
-    write(10,*) 'row communicator detais:'
-    call print_smp_info(decomp_main%ROW_INFO)
-    write(10,*)' '
-    write(10,*)'Buffer count and displacement of per-core buffers'
-    write(10,*)'x1cnts:',decomp_main%x1cnts
-    write(10,*)'y1cnts:',decomp_main%y1cnts
-    write(10,*)'y2cnts:',decomp_main%y2cnts
-    write(10,*)'z2cnts:',decomp_main%z2cnts
-    write(10,*)'x1disp:',decomp_main%x1disp
-    write(10,*)'y1disp:',decomp_main%y1disp
-    write(10,*)'y2disp:',decomp_main%y2disp
-    write(10,*)'z2disp:',decomp_main%z2disp
-    write(10,*)' '
-    write(10,*)'Buffer count and displacement of shared buffers'
-    write(10,*)'x1cnts:',decomp_main%x1cnts_s
-    write(10,*)'y1cnts:',decomp_main%y1cnts_s
-    write(10,*)'y2cnts:',decomp_main%y2cnts_s
-    write(10,*)'z2cnts:',decomp_main%z2cnts_s
-    write(10,*)'x1disp:',decomp_main%x1disp_s
-    write(10,*)'y1disp:',decomp_main%y1disp_s
-    write(10,*)'y2disp:',decomp_main%y2disp_s
-    write(10,*)'z2disp:',decomp_main%z2disp_s
-    write(10,*)' '
-    close(10)
-#endif
-
     ! determine the number of bytes per float number
     ! do not use 'mytype' which is compiler dependent
     ! also possible to use inquire(iolength=...) 
     call MPI_TYPE_SIZE(real_type,mytype_bytes,ierror)
     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
-
-#ifdef EVEN
-    if (nrank==0) write(*,*) 'Padded ALLTOALL optimisation on'
-#endif 
 
     return
   end subroutine decomp_2d_init
@@ -538,9 +415,6 @@ contains
     implicit none
 
     call decomp_info_finalize(decomp_main)
-
-    decomp_buf_size = 0
-    deallocate(work1_r, work2_r, work1_c, work2_c)
 
     return
   end subroutine decomp_2d_finalize
@@ -635,57 +509,6 @@ contains
     allocate(decomp%xdispls_yz(nproc),decomp%zdispls_yz(nproc))
     !
     call prepare_buffer(decomp)
-
-#ifdef SHM
-    ! prepare shared-memory information if required
-    call decomp_info_init_shm(decomp)
-#endif
-
-    ! allocate memory for the MPI_ALLTOALL(V) buffers
-    ! define the buffers globally for performance reason
-
-    buf_size = max(decomp%xsz(1)*decomp%xsz(2)*decomp%xsz(3), &
-               max(decomp%ysz(1)*decomp%ysz(2)*decomp%ysz(3), &
-                   decomp%zsz(1)*decomp%zsz(2)*decomp%zsz(3)) )
-#ifdef EVEN
-    ! padded alltoall optimisation may need larger buffer space
-    buf_size = max(buf_size, &
-               max(decomp%x1count*dims(1),decomp%y2count*dims(2)) ) 
-#endif
-
-    ! check if additional memory is required
-    ! *** TODO: consider how to share the real/complex buffers 
-    if (buf_size > decomp_buf_size) then
-       decomp_buf_size = buf_size
-       if (allocated(work1_r)) deallocate(work1_r)
-       if (allocated(work2_r)) deallocate(work2_r)
-       if (allocated(work1_c)) deallocate(work1_c)
-       if (allocated(work2_c)) deallocate(work2_c)
-       allocate(work1_r(buf_size), STAT=status)
-       if (status /= 0) then
-          errorcode = 2
-          call decomp_2d_abort(errorcode, &
-               'Out of memory when allocating 2DECOMP workspace')
-       end if
-       allocate(work2_r(buf_size), STAT=status)
-       if (status /= 0) then
-          errorcode = 2
-          call decomp_2d_abort(errorcode, &
-               'Out of memory when allocating 2DECOMP workspace')
-       end if
-       allocate(work1_c(buf_size), STAT=status)
-       if (status /= 0) then
-          errorcode = 2
-          call decomp_2d_abort(errorcode, &
-               'Out of memory when allocating 2DECOMP workspace')
-       end if
-       allocate(work2_c(buf_size), STAT=status)
-       if (status /= 0) then
-          errorcode = 2
-          call decomp_2d_abort(errorcode, &
-               'Out of memory when allocating 2DECOMP workspace')
-       end if
-    end if
 
     return
   end subroutine decomp_info_init
@@ -1888,317 +1711,6 @@ contains
 
     return
   end subroutine prepare_buffer
-
-#ifdef SHM
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !  Generate shared-memory information 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine decomp_info_init_shm(decomp)
-
-    implicit none
-
-    TYPE(DECOMP_INFO), intent(INOUT) :: decomp
-
-    ! a copy of old displacement array (will be overwritten by shm code)
-    allocate(decomp%x1disp_o(0:dims(1)-1),decomp%y1disp_o(0:dims(1)-1), &
-         decomp%y2disp_o(0:dims(2)-1),decomp%z2disp_o(0:dims(2)-1))
-    decomp%x1disp_o = decomp%x1disp
-    decomp%y1disp_o = decomp%y1disp
-    decomp%y2disp_o = decomp%y2disp
-    decomp%z2disp_o = decomp%z2disp
-
-    call prepare_shared_buffer(decomp%ROW_INFO,DECOMP_2D_COMM_ROW,decomp)
-    call prepare_shared_buffer(decomp%COL_INFO,DECOMP_2D_COMM_COL,decomp)
-
-    return
-  end subroutine decomp_info_init_shm
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! For shared-memory implementation, prepare send/recv shared buffer
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine prepare_shared_buffer(C,MPI_COMM,decomp)
-
-    implicit none
-
-    TYPE(SMP_INFO) :: C
-    INTEGER :: MPI_COMM
-    TYPE(DECOMP_INFO) :: decomp
-
-    INTEGER, ALLOCATABLE :: KTBL(:,:),NARY(:,:),KTBLALL(:,:)
-    INTEGER MYSMP, MYCORE, COLOR
-
-    integer :: ierror
-
-    C%MPI_COMM = MPI_COMM
-    CALL MPI_COMM_SIZE(MPI_COMM,C%NCPU,ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_SIZE")
-    CALL MPI_COMM_RANK(MPI_COMM,C%NODE_ME,ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_RANK")
-    C%SMP_COMM  = MPI_COMM_NULL
-    C%CORE_COMM = MPI_COMM_NULL
-    C%SMP_ME= 0
-    C%NCORE = 0
-    C%CORE_ME = 0
-    C%MAXCORE = 0
-    C%NSMP  = 0
-    C%N_SND = 0
-    C%N_RCV = 0
-    C%SND_P = 0
-    C%RCV_P = 0
-    C%SND_P_c = 0
-    C%RCV_P_c = 0
-
-    ! get smp-node map for this communicator and set up smp communicators
-    CALL GET_SMP_MAP(C%MPI_COMM, C%NSMP, MYSMP, &
-         C%NCORE, MYCORE, C%MAXCORE)
-    C%SMP_ME = MYSMP + 1
-    C%CORE_ME = MYCORE + 1
-    ! - set up inter/intra smp-node communicators
-    COLOR = MYCORE
-    IF (COLOR.GT.0) COLOR = MPI_UNDEFINED
-    CALL MPI_Comm_split(C%MPI_COMM, COLOR, MYSMP, C%SMP_COMM, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_SPLIT")
-    CALL MPI_Comm_split(C%MPI_COMM, MYSMP, MYCORE, C%CORE_COMM, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_SPLIT")
-    ! - allocate work space
-    ALLOCATE(KTBL(C%MAXCORE,C%NSMP),NARY(C%NCPU,C%NCORE))
-    ALLOCATE(KTBLALL(C%MAXCORE,C%NSMP))
-    ! - set up smp-node/core to node_me lookup table
-    KTBL = 0
-    KTBL(C%CORE_ME,C%SMP_ME) = C%NODE_ME + 1
-    CALL MPI_ALLREDUCE(KTBL,KTBLALL,C%NSMP*C%MAXCORE,MPI_INTEGER, &
-         MPI_SUM,MPI_COMM,ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-    KTBL=KTBLALL
-    !  IF (SUM(KTBL) /= C%NCPU*(C%NCPU+1)/2) &
-    !       CALL MPI_ABORT(...
-
-    ! compute offsets in shared SNDBUF and RCVBUF
-    CALL MAPSET_SMPSHM(C, KTBL, NARY, decomp)
-
-    DEALLOCATE(KTBL,NARY)
-
-    return
-  end subroutine prepare_shared_buffer
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Use Ian Bush's FreeIPC to generate shared-memory information
-  !  - system independent solution
-  !  - replacing David Tanqueray's implementation in alloc_shm.c
-  !    (old C code renamed to get_smp_map2)
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine get_smp_map(comm, nnodes, my_node, ncores, my_core, maxcor)
-
-    use FIPC_module
-
-    implicit none
-
-    integer, intent(IN) :: comm
-    integer, intent(OUT) :: nnodes, my_node, ncores, my_core, maxcor
-
-    integer :: intra_comm, extra_comm
-    integer :: ierror
-
-    call FIPC_init(comm, ierror)
-
-    ! intra_comm: communicator for processes on this shared memory node
-    ! extra_comm: communicator for all rank 0 on each shared memory node
-    call FIPC_ctxt_intra_comm(FIPC_ctxt_world, intra_comm, ierror)
-    call FIPC_ctxt_extra_comm(FIPC_ctxt_world, extra_comm, ierror)
-
-    call MPI_COMM_SIZE(intra_comm,  ncores, ierror)
-    call MPI_COMM_RANK(intra_comm, my_core, ierror)
-
-    ! only rank 0 on each shared memory node member of extra_comm
-    ! for others extra_comm = MPI_COMM_NULL
-    if (extra_comm /= MPI_COMM_NULL) then
-       call MPI_COMM_SIZE(extra_comm,  nnodes, ierror)
-       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_SIZE")
-       call MPI_COMM_RANK(extra_comm, my_node, ierror)
-       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_RANK")
-    end if
-
-    ! other ranks share the same information as their leaders
-    call MPI_BCAST( nnodes, 1, MPI_INTEGER, 0, intra_comm, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_BCAST")
-    call MPI_BCAST(my_node, 1, MPI_INTEGER, 0, intra_comm, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_BCAST")
-
-    ! maxcor
-    call MPI_ALLREDUCE(ncores, maxcor, 1, MPI_INTEGER, MPI_MAX, &
-         MPI_COMM_WORLD, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
-
-    call FIPC_finalize(ierror)
-
-    return
-
-  end subroutine get_smp_map
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Set up smp-node based shared memory maps
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE MAPSET_SMPSHM(C, KTBL, NARY, decomp)
-
-    IMPLICIT NONE
-
-    TYPE (SMP_INFO) C
-    INTEGER KTBL(C%MAXCORE,C%NSMP)
-    INTEGER NARY(C%NCPU,C%NCORE)
-    TYPE (DECOMP_INFO) :: decomp
-
-    INTEGER i, j, k, l, N, PTR, BSIZ, ierror, status, seed
-    character*16 s
-
-    BSIZ = C%N_SND
-
-    ! a - SNDBUF
-    IF (C%MPI_COMM==DECOMP_2D_COMM_COL) THEN
-       ALLOCATE(decomp%x1cnts_s(C%NSMP),decomp%x1disp_s(C%NSMP+1), &
-            stat=status)
-       CALL MPI_Allgather(decomp%x1cnts, C%NCPU, MPI_INTEGER, &
-            NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
-       PTR = 0
-       DO i=1,C%NSMP
-          decomp%x1disp_s(i) = PTR
-          N = 0
-          DO j=1,C%MAXCORE
-             k = KTBL(j,i)
-             IF (k > 0) then
-                DO l=1,C%NCORE
-                   IF (l == C%CORE_ME) decomp%x1disp_o(k-1) = PTR
-                   N = N + NARY(k,l)
-                   PTR = PTR + NARY(k,l)
-                END DO
-             END IF
-          END DO
-          decomp%x1cnts_s(i) = N
-       END DO
-       decomp%x1disp_s(C%NSMP+1) = PTR
-       IF (PTR > BSIZ) BSIZ = PTR
-
-    ELSE IF (C%MPI_COMM==DECOMP_2D_COMM_ROW) THEN
-       ALLOCATE(decomp%y2cnts_s(C%NSMP),decomp%y2disp_s(C%NSMP+1), &
-            stat=status)
-       CALL MPI_Allgather(decomp%y2cnts, C%NCPU, MPI_INTEGER, &
-            NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
-       PTR = 0
-       DO i=1,C%NSMP
-          decomp%y2disp_s(i) = PTR
-          N = 0
-          DO j=1,C%MAXCORE
-             k = KTBL(j,i)
-             IF (k > 0) then
-                DO l=1,C%NCORE
-                   IF (l == C%CORE_ME) decomp%y2disp_o(k-1) = PTR
-                   N = N + NARY(k,l)
-                   PTR = PTR + NARY(k,l)
-                END DO
-             END IF
-          END DO
-          decomp%y2cnts_s(i) = N
-       END DO
-       decomp%y2disp_s(C%NSMP+1) = PTR
-       IF (PTR > BSIZ) BSIZ = PTR
-    END IF
-
-    ! b - RCVBUF
-
-    IF (C%MPI_COMM==DECOMP_2D_COMM_COL) THEN
-       ALLOCATE(decomp%y1cnts_s(C%NSMP),decomp%y1disp_s(C%NSMP+1), &
-            stat=status)
-       CALL MPI_Allgather(decomp%y1cnts, C%NCPU, MPI_INTEGER, &
-            NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
-       PTR = 0
-       DO i=1,C%NSMP
-          decomp%y1disp_s(i) = PTR
-          N=0
-          DO j=1,C%NCORE
-             DO l=1,C%MAXCORE
-                k = KTBL(l,i)
-                IF (k > 0) then
-                   IF (j == C%CORE_ME) decomp%y1disp_o(k-1) = PTR
-                   N = N + NARY(k,j)
-                   PTR = PTR + NARY(k,j)
-                END IF
-             END DO
-          END DO
-          decomp%y1cnts_s(i) = N
-       END DO
-       decomp%y1disp_s(C%NSMP+1) = PTR
-       IF (PTR > BSIZ) BSIZ = PTR
-
-    ELSE IF (C%MPI_COMM==DECOMP_2D_COMM_ROW) THEN
-       ALLOCATE(decomp%z2cnts_s(C%NSMP),decomp%z2disp_s(C%NSMP+1), &
-            stat=status)
-       CALL MPI_Allgather(decomp%z2cnts, C%NCPU, MPI_INTEGER, &
-            NARY, C%NCPU, MPI_INTEGER, C%CORE_COMM, ierror)
-       if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLGATHER")
-       PTR = 0
-       DO i=1,C%NSMP
-          decomp%z2disp_s(i) = PTR
-          N=0
-          DO j=1,C%NCORE
-             DO l=1,C%MAXCORE
-                k = KTBL(l,i)
-                IF (k > 0) then
-                   IF (j == C%CORE_ME) decomp%z2disp_o(k-1) = PTR
-                   N = N + NARY(k,j)
-                   PTR = PTR + NARY(k,j)
-                END IF
-             END DO
-          END DO
-          decomp%z2cnts_s(i) = N
-       END DO
-       decomp%z2disp_s(C%NSMP+1) = PTR
-       IF (PTR > BSIZ) BSIZ = PTR
-
-    END IF
-
-    ! check buffer size and (re)-allocate buffer space if necessary
-    IF (BSIZ > C%N_SND) then
-       IF (C%SND_P /= 0) CALL DEALLOC_SHM(C%SND_P, C%CORE_COMM)
-       ! make sure each rank has unique keys to get shared memory
-       !IF (C%MPI_COMM==DECOMP_2D_COMM_COL) THEN
-       !   seed = nrank+nproc*0+1 ! has to be non-zero
-       !ELSE IF (C%MPI_COMM==DECOMP_2D_COMM_ROW) THEN
-       !   seed = nrank+nproc*1+1
-       !END IF
-       status = 1
-       !CALL ALLOC_SHM(C%SND_P, BSIZ, real_type, C%CORE_COMM, status, &
-       !     seed)
-       CALL ALLOC_SHM(C%SND_P, BSIZ, real_type, C%CORE_COMM, status)
-       C%N_SND = BSIZ
-
-       IF (C%RCV_P /= 0) CALL DEALLOC_SHM(C%RCV_P, C%CORE_COMM)
-       status = 1
-       CALL ALLOC_SHM(C%RCV_P, BSIZ, real_type, C%CORE_COMM, status)
-       C%N_RCV = BSIZ
-
-       IF (C%SND_P_c /= 0) CALL DEALLOC_SHM(C%SND_P_c, C%CORE_COMM)
-       status = 1
-       CALL ALLOC_SHM(C%SND_P_c, BSIZ, complex_type, C%CORE_COMM, status)
-       C%N_SND = BSIZ
-
-       IF (C%RCV_P_c /= 0) CALL DEALLOC_SHM(C%RCV_P_c, C%CORE_COMM)
-       status = 1
-       CALL ALLOC_SHM(C%RCV_P_c, BSIZ, complex_type, C%CORE_COMM, status)
-       C%N_RCV = BSIZ
-
-
-    END IF
-
-    RETURN
-  END SUBROUTINE MAPSET_SMPSHM
-
-#endif
-
 
 #ifdef OCC
   ! For non-blocking communication code, progress the comminication stack
