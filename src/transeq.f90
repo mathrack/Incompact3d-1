@@ -122,9 +122,9 @@ contains
     integer :: code, mpi_req(6)
     integer :: mpi_status(MPI_STATUS_SIZE, 6)
 
-    do i = 1, 6
-      mpi_status(:,i) = MPI_STATUS_IGNORE
-    enddo
+    code = 0
+    mpi_req = 0
+    mpi_status = 0
     call transpose_x_to_y_start(ux1,ux2,mpi_req(1))
     call transpose_x_to_y_start(uy1,uy2,mpi_req(2))
     call transpose_x_to_y_start(uz1,uz2,mpi_req(3))
@@ -174,7 +174,10 @@ contains
 
 #ifdef OCC
     call MPI_WAITALL(3, mpi_req(1:3), mpi_status(:,1:3), code)
-    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAITALL")
+    if (code.ne.0 .or. any(mpi_status(MPI_ERROR,1:3).ne.0)) then
+      print *, "Error in MPI_WAIT: ", code, mpi_status(MPI_ERROR,1:3), mpi_status(:,1:3)
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
 #else
     call transpose_x_to_y(ux1,ux2)
     call transpose_x_to_y(uy1,uy2)
@@ -227,7 +230,10 @@ contains
 
 #ifdef OCC
     call MPI_WAITALL(3, mpi_req(4:6), mpi_status(:,4:6), code)
-    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAITALL")
+    if (code.ne.0 .or. any(mpi_status(MPI_ERROR,4:6).ne.0)) then
+      print *, "Error in MPI_WAIT: ", code, mpi_status(MPI_ERROR,4:6), mpi_status(:,4:6)
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
 #else
     call transpose_y_to_z(ux2,ux3)
     call transpose_y_to_z(uy2,uy3)
@@ -288,47 +294,23 @@ contains
 
     !DIFFUSIVE TERMS IN Z
     call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
+    call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
+
     ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
     if (ilmn) then
       td3(:,:,:) = mu3(:,:,:) * xnu*ta3(:,:,:) - half * td3(:,:,:)
-    else
-      td3(:,:,:) = xnu*ta3(:,:,:) - half * td3(:,:,:)
-    endif
-    !WORK Y-PENCILS
-#ifdef OCC
-    call transpose_z_to_y_start(td3,td2,mpi_req(1))
-#else
-    call transpose_z_to_y(td3,td2)
-#endif
-
-    !DIFFUSIVE TERMS IN Z
-    call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1)
-    ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
-    if (ilmn) then
       te3(:,:,:) = mu3(:,:,:) * xnu*tb3(:,:,:) - half * te3(:,:,:)
-    else
-      te3(:,:,:) = xnu*tb3(:,:,:) - half * te3(:,:,:)
-    endif
-    !WORK Y-PENCILS
-#ifdef OCC
-    call transpose_z_to_y_start(te3,te2,mpi_req(2))
-#else
-    call transpose_z_to_y(te3,te2)
-#endif
-
-    !DIFFUSIVE TERMS IN Z
-    call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0)
-    ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
-    if (ilmn) then
       tf3(:,:,:) = mu3(:,:,:) * xnu*tc3(:,:,:) - half * tf3(:,:,:)
     else
+      td3(:,:,:) = xnu*ta3(:,:,:) - half * td3(:,:,:)
+      te3(:,:,:) = xnu*tb3(:,:,:) - half * te3(:,:,:)
       tf3(:,:,:) = xnu*tc3(:,:,:) - half * tf3(:,:,:)
     endif
+
     !WORK Y-PENCILS
-#ifdef OCC
-    call MPI_WAITALL(2, mpi_req(1:2), mpi_status(:,1:2), code)
-    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAITALL")
-#endif
+    call transpose_z_to_y(td3,td2)
+    call transpose_z_to_y(te3,te2)
     call transpose_z_to_y(tf3,tf2)
 
     ! Convective terms of y-pencil (tg2,th2,ti2) and sum of convective and diffusive terms of z-pencil (td2,te2,tf2) are now in tg2, th2, ti2 (half for skew-symmetric)
@@ -797,8 +779,11 @@ contains
     real(mytype) :: xalpha
 
 #ifdef OCC
-    integer :: code, mpi_req(2)
+    integer :: code, mpi_req(2), mpi_status(MPI_STATUS_SIZE)
 
+    code = 0
+    mpi_req = 0
+    mpi_status = 0
     call transpose_x_to_y_start(phi1,td2,mpi_req(1))
     call transpose_x_to_z_start(phi1,td3,mpi_req(2))
 #endif
@@ -848,8 +833,11 @@ contains
     ta1(:,:,:) = xalpha*ta1(:,:,:) - tb1(:,:,:)
 
 #ifdef OCC
-    call MPI_WAIT(mpi_req(1), MPI_STATUS_IGNORE, code)
-    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAIT")
+    call MPI_WAIT(mpi_req(1), mpi_status, code)
+    if (code.ne.0 .or. mpi_status(MPI_ERROR).ne.0) then
+      print *, "Error in MPI_WAIT: ", code, mpi_status(MPI_ERROR), mpi_status
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
 #else
     call transpose_x_to_y(phi1(:,:,:),td2(:,:,:))
 #endif
@@ -917,8 +905,11 @@ contains
     tc2(:,:,:) = xalpha*ta2(:,:,:) - tb2(:,:,:)
 
 #ifdef OCC
-    call MPI_WAIT(mpi_req(2), MPI_STATUS_IGNORE, code)
-    if (code.ne.0) call decomp_2d_abort(code,"MPI_WAIT")
+    call MPI_WAIT(mpi_req(2), mpi_status, code)
+    if (code.ne.0 .or. mpi_status(MPI_ERROR).ne.0) then
+      print *, "Error in MPI_WAIT: ", code, mpi_status(MPI_ERROR), mpi_status
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
 #else
     call transpose_y_to_z(td2(:,:,:),td3(:,:,:))
 #endif
