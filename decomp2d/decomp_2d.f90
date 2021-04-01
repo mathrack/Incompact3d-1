@@ -1223,7 +1223,7 @@ contains
 
     ! Local variables
     integer :: i, k, rk, rank_x, rank_z, subsize, offset, ierror
-    integer, dimension(2) :: coord
+    integer, dimension(2) :: tmp_coord
 #ifdef MPI3
     integer, dimension(nproc) :: xranks, zranks, xweights, zweights
     integer :: index_src, index_dest
@@ -1455,9 +1455,9 @@ contains
     index_dest=0
 #endif
 
-    call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
+    call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,tmp_coord,ierror)
     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
-    i = coord(2)
+    i = tmp_coord(2)
     do k=0,dims(1)-1
 
       ! Get rank_x and rank_z
@@ -1587,9 +1587,9 @@ contains
     index_dest=0
 #endif
       
-    call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
+    call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,tmp_coord,ierror)
     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
-    k = coord(1)
+    k = tmp_coord(1)
     do i=0,dims(2)-1
 
       ! Get rank_x and rank_z
