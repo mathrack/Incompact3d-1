@@ -1102,8 +1102,7 @@ contains
     end do
 
     ! back to Z-pencil
-    call transpose_x_to_y(rw1b,rw2,ph)
-    call transpose_y_to_z(rw2,rhs,ph)
+    call transpose_x_to_z(rw1b,rhs,ph)
 
     if (.not. fft_initialised) then
        call decomp_2d_fft_init(PHYSICAL_IN_Z,nx,ny,nz)
@@ -1450,8 +1449,7 @@ contains
           enddo
        enddo
     end do
-    call transpose_x_to_y(rw1b,rw2,ph)
-    call transpose_y_to_z(rw2,rhs,ph)
+    call transpose_x_to_z(rw1b,rhs,ph)
 
     !  call decomp_2d_fft_finalize
 
