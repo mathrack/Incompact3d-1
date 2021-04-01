@@ -117,7 +117,7 @@ subroutine transpose_y_to_z_real_start(src, dst, req, decomp)
       src,decomp%xcnts_yz(decomp%xranks_yz),decomp%xdispls_yz(decomp%xranks_yz),decomp%xtypes_yzr(decomp%xranks_yz), &
       dst,decomp%zcnts_yz(decomp%zranks_yz),decomp%zdispls_yz(decomp%zranks_yz),decomp%ztypes_yzr(decomp%zranks_yz), &
       decomp%ytozNeighborComm,req,ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_NEIGHBOR_ALLTOALLW")
+  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_INEIGHBOR_ALLTOALLW")
 #else
   call MPI_IAlltoallw(src,decomp%xcnts_yz,decomp%xdispls_yz,decomp%xtypes_yzr, &
                       dst,decomp%zcnts_yz,decomp%zdispls_yz,decomp%ztypes_yzr,MPI_COMM_WORLD,req,ierror)
