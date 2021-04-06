@@ -271,7 +271,11 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
 
   use decomp_2d, only : mytype, nrank
   use param
-  use MPI
+#ifdef MPI3
+  USE MPI_f08
+#else
+  USE MPI
+#endif
 
   implicit none
 
@@ -430,7 +434,11 @@ subroutine second_derivative(alsa1,as1,bs1,&
 
   use decomp_2d, only : mytype, nrank
   use param
-  use MPI
+#ifdef MPI3
+  USE MPI_f08
+#else
+  USE MPI
+#endif
   use variables, only : nu0nu,cnu
 
   implicit none

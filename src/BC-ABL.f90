@@ -44,7 +44,11 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -269,7 +273,11 @@ contains
   !
   !*******************************************************************************
 
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE decomp_2d
     USE param
     USE variables
@@ -540,7 +548,11 @@ contains
     USE decomp_2d_poisson
     USE param
     USE var
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -666,7 +678,11 @@ contains
   !*******************************************************************************
 
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE param
     USE variables
     USE var, only : sxz1, nut1, sxy1, syz1, phi1
@@ -769,7 +785,11 @@ contains
   !
   !*******************************************************************************
 
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE decomp_2d
     USE decomp_2d_io
     USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean

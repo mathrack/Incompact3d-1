@@ -34,7 +34,11 @@ contains
         USE var, only: Fdiscx, Fdiscy, Fdiscz, GammaDisc
         USE decomp_2d
         USE decomp_2d_io
+#ifdef MPI3
+        USE MPI_f08
+#else
         USE MPI
+#endif
 
         implicit none
         integer,intent(in) :: Ndiscs
@@ -71,7 +75,11 @@ contains
     subroutine actuator_disc_model_compute_source(ux1,uy1,uz1)
         
         use decomp_2d, only: mytype, nproc, xstart, xend, xsize, update_halo, decomp_2d_abort
-        use MPI
+#ifdef MPI3
+        USE MPI_f08
+#else
+        USE MPI
+#endif
         use param, only: dx,dy,dz,istret,dt,itime,initstat,rho_air,dBL,ustar
         use var, only: FDiscx, FDiscy, FDiscz, GammaDisc, yp
         

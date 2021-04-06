@@ -41,7 +41,11 @@ contains
 
   subroutine intt(var1,dvar1,npaire,isc,forcing1)
 
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE param
     USE variables
     USE decomp_2d

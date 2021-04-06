@@ -228,7 +228,11 @@ contains
     USE var, ONLY: ta1, tb1, tc1, pp1, pgy1, pgz1, di1, &
          duxdxp2, uyp2, uzp2, duydypi2, upi2, ta2, dipp2, &
          duxydxyp3, uzp3, po3, dipp3, nxmsize, nymsize, nzmsize
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -353,7 +357,11 @@ contains
     USE param
     USE decomp_2d
     USE variables
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE var, only: pp1,pgy1,pgz1,di1,pp2,ppi2,pgy2,pgz2,pgzi2,dip2,&
          pgz3,ppi3,dip3,nxmsize,nymsize,nzmsize
 
@@ -471,7 +479,11 @@ contains
     USE variables
     USE param
     USE var
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE TBL, ONLY:tbl_flrt
     use ibm, only : corgp_ibm, body
 
@@ -1022,7 +1034,11 @@ contains
   !############################################################################
   SUBROUTINE test_varcoeff(converged, divup3norm, pp3, dv3, atol, rtol, poissiter)
 
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE decomp_2d, ONLY: mytype, ph1, real_type, nrank, decomp_2d_abort
     USE var, ONLY : nzmsize
     USE param, ONLY : npress
@@ -1095,7 +1111,11 @@ contains
   !############################################################################
   SUBROUTINE calc_varcoeff_rhs(pp3, rho1, px1, py1, pz1, dv3, drho1, ep1, divu3, rho0, poissiter)
 
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     USE decomp_2d
 

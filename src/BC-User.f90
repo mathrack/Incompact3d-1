@@ -51,7 +51,11 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -127,7 +131,11 @@ contains
   subroutine postprocess_user(ux1,uy1,uz1,phi1,ep1)
 
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1

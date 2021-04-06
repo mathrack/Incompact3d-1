@@ -52,7 +52,11 @@ contains
     USE variables
     USE param
     USE var
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -105,7 +109,11 @@ contains
     USE variables
     USE param
     USE var
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -164,7 +172,11 @@ contains
     USE decomp_2d
     USE simulation_stats
     USE var
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -225,12 +237,21 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     use navier, only : gradp
 
     implicit none
 
-    integer :: i,j,k,iresflg,nzmsize,fh,code,ierr2,is,it
+#ifdef MPI3
+    type(mpi_file) :: fh
+#else
+    integer :: fh
+#endif
+    integer :: i,j,k,iresflg,nzmsize,code,ierr2,is,it
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
@@ -556,11 +577,20 @@ contains
     use decomp_2d_io
     use var, only: ux_inflow, uy_inflow, uz_inflow
     use param
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
 
     implicit none
 
-    integer :: fh,code,ierr2,ifileinflow
+#ifdef MPI3
+    type(mpi_file) :: fh
+#else
+    integer :: fh
+#endif
+    integer :: code,ierr2,ifileinflow
     real(mytype), dimension(NTimeSteps,xsize(2),xsize(3)) :: ux1,uy1,uz1
     integer (kind=MPI_OFFSET_KIND) :: disp
     character(20) :: fninflow
@@ -635,12 +665,21 @@ contains
     use decomp_2d_io
     use param
     use var, only: ux_recoutflow, uy_recoutflow, uz_recoutflow
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
 
     implicit none
 
     integer,intent(in) :: ifileoutflow
-    integer :: fh, code, ierr2
+#ifdef MPI3
+    type(mpi_file) :: fh
+#else
+    integer :: fh
+#endif
+    integer :: code, ierr2
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     character(20) :: fnoutflow
     
@@ -690,7 +729,11 @@ contains
     use variables
     use param
     use var
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
 
     implicit none
 
@@ -770,7 +813,11 @@ contains
   subroutine compute_cfl(ux,uy,uz)
     use param, only : dx,dy,dz,dt,istret
     use decomp_2d, only : nrank, mytype, xsize, xstart, xend, real_type, decomp_2d_abort
-    use mpi
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
     use variables, only : dyp
 
     implicit none
@@ -967,7 +1014,11 @@ subroutine stretching()
   USE variables
   USE param
   USE var
+#ifdef MPI3
+  USE MPI_f08
+#else
   USE MPI
+#endif
 
   implicit none
 
@@ -1154,7 +1205,11 @@ subroutine inversion5_v1(aaa,eee,spI)
   USE variables
   USE param
   USE var
+#ifdef MPI3
+  USE MPI_f08
+#else
   USE MPI
+#endif
 
   implicit none
 
@@ -1294,7 +1349,11 @@ subroutine inversion5_v2(aaa,eee,spI)
   USE variables
   USE param
   USE var
+#ifdef MPI3
+  USE MPI_f08
+#else
   USE MPI
+#endif
 
   implicit none
 
@@ -1430,7 +1489,11 @@ subroutine tripping(tb,ta)
   USE param
   USE variables
   USE decomp_2d
+#ifdef MPI3
+  USE MPI_f08
+#else
   USE MPI
+#endif
 
   implicit none
 
@@ -1551,7 +1614,11 @@ subroutine tbl_tripping(tb,ta)
   USE param
   USE variables
   USE decomp_2d
+#ifdef MPI3
+  USE MPI_f08
+#else
   USE MPI
+#endif
 
   implicit none
 

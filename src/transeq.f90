@@ -91,7 +91,11 @@ contains
   !############################################################################
   subroutine momentum_rhs_eq(dux1,duy1,duz1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
 
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
     use param
     use variables
     use decomp_2d
@@ -119,18 +123,18 @@ contains
     integer :: i,j,k,is
 
 #ifdef OCC
-    integer :: code, mpi_req(6)
-    integer :: mpi_status(MPI_STATUS_SIZE, 6)
+    integer :: code
+#ifdef MPI3
+    type(mpi_request) :: mpi_req(3)
+    type(mpi_status) :: mpi_stat(3)
+    mpi_stat(:)%MPI_ERROR = 0
+#else
+    integer :: mpi_req(3), mpi_stat(MPI_STATUS_SIZE, 3)
+#endif
 
-    code = 0
-    mpi_req = 0
-    mpi_status = 0
     call transpose_x_to_y_start(ux1,ux2,mpi_req(1))
     call transpose_x_to_y_start(uy1,uy2,mpi_req(2))
     call transpose_x_to_y_start(uz1,uz2,mpi_req(3))
-    call transpose_x_to_z_start(ux1,ux3,mpi_req(4))
-    call transpose_x_to_z_start(uy1,uy3,mpi_req(5))
-    call transpose_x_to_z_start(uz1,uz3,mpi_req(6))
 #endif
 
     !SKEW SYMMETRIC FORM
@@ -173,11 +177,20 @@ contains
     endif
 
 #ifdef OCC
-    call MPI_WAITALL(3, mpi_req(1:3), mpi_status(:,1:3), code)
-    if (code.ne.0 .or. any(mpi_status(MPI_ERROR,1:3).ne.0)) then
-      print *, "Error in MPI_WAIT: ", code, mpi_status(MPI_ERROR,1:3), mpi_status(:,1:3)
+#ifdef MPI3
+    call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(1:3), code)
+    if (code.ne.0 .or. any(mpi_stat(1:3)%MPI_ERROR.ne.0)) then
+      print *, "Error in MPI_WAIT: ", code, mpi_stat(1:3)%MPI_ERROR
+#else
+    call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(:,1:3), code)
+    if (code.ne.0 .or. any(mpi_stat(MPI_ERROR,1:3).ne.0)) then
+      print *, "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR,1:3)
+#endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
+    call transpose_y_to_z_start(ux2,ux3,mpi_req(1))
+    call transpose_y_to_z_start(uy2,uy3,mpi_req(2))
+    call transpose_y_to_z_start(uz2,uz3,mpi_req(3))
 #else
     call transpose_x_to_y(ux1,ux2)
     call transpose_x_to_y(uy1,uy2)
@@ -229,9 +242,15 @@ contains
     endif
 
 #ifdef OCC
-    call MPI_WAITALL(3, mpi_req(4:6), mpi_status(:,4:6), code)
-    if (code.ne.0 .or. any(mpi_status(MPI_ERROR,4:6).ne.0)) then
-      print *, "Error in MPI_WAIT: ", code, mpi_status(MPI_ERROR,4:6), mpi_status(:,4:6)
+#ifdef MPI3
+    call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(1:3), code)
+    if (code.ne.0 .or. any(mpi_stat(1:3)%MPI_ERROR.ne.0)) then
+      print *, "Error in MPI_WAIT: ", code, mpi_stat(1:3)%MPI_ERROR
+#else
+    call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(:,1:3), code)
+    if (code.ne.0 .or. any(mpi_stat(MPI_ERROR,1:3).ne.0)) then
+      print *, "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR,1:3)
+#endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
 #else
@@ -751,7 +770,11 @@ contains
   !############################################################################
   subroutine scalar_transport_eq(dphi1, rho1, ux1, uy1, uz1, phi1, schmidt, is_even, is_skew)
 
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
     use param
     use variables
     use decomp_2d
@@ -779,13 +802,16 @@ contains
     real(mytype) :: xalpha
 
 #ifdef OCC
-    integer :: code, mpi_req(2), mpi_status(MPI_STATUS_SIZE)
+    integer :: code
+#ifdef MPI3
+    type(mpi_request) :: mpi_req
+    type(mpi_status) :: mpi_stat
+    mpi_stat%MPI_ERROR = 0
+#else
+    integer :: mpi_req, mpi_stat(MPI_STATUS_SIZE)
+#endif
 
-    code = 0
-    mpi_req = 0
-    mpi_status = 0
-    call transpose_x_to_y_start(phi1,td2,mpi_req(1))
-    call transpose_x_to_z_start(phi1,td3,mpi_req(2))
+    call transpose_x_to_y_start(phi1,td2,mpi_req)
 #endif
 
     evensc = .true.
@@ -833,11 +859,17 @@ contains
     ta1(:,:,:) = xalpha*ta1(:,:,:) - tb1(:,:,:)
 
 #ifdef OCC
-    call MPI_WAIT(mpi_req(1), mpi_status, code)
-    if (code.ne.0 .or. mpi_status(MPI_ERROR).ne.0) then
-      print *, "Error in MPI_WAIT: ", code, mpi_status(MPI_ERROR), mpi_status
+    call MPI_WAIT(mpi_req, mpi_stat, code)
+#ifdef MPI3
+    if (code.ne.0 .or. mpi_stat%MPI_ERROR.ne.0) then
+      write(*,*) "Error in MPI_WAIT: ", code, mpi_stat%MPI_ERROR
+#else
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR).ne.0) then
+      write(*,*) "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR)
+#endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
+    call transpose_y_to_z_start(td2,td3,mpi_req)
 #else
     call transpose_x_to_y(phi1(:,:,:),td2(:,:,:))
 #endif
@@ -905,9 +937,14 @@ contains
     tc2(:,:,:) = xalpha*ta2(:,:,:) - tb2(:,:,:)
 
 #ifdef OCC
-    call MPI_WAIT(mpi_req(2), mpi_status, code)
-    if (code.ne.0 .or. mpi_status(MPI_ERROR).ne.0) then
-      print *, "Error in MPI_WAIT: ", code, mpi_status(MPI_ERROR), mpi_status
+    call MPI_WAIT(mpi_req, mpi_stat, code)
+#ifdef MPI3
+    if (code.ne.0 .or. mpi_stat%MPI_ERROR.ne.0) then
+      print *, "Error in MPI_WAIT: ", code, mpi_stat%MPI_ERROR
+#else
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR).ne.0) then
+      print *, "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR)
+#endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
 #else

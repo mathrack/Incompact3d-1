@@ -103,7 +103,11 @@ end program xcompact3d
 !########################################################################
 subroutine init_xcompact3d()
 
-  use MPI
+#ifdef MPI3
+  USE MPI_f08
+#else
+  USE MPI
+#endif
   use decomp_2d
   USE decomp_2d_poisson, ONLY : decomp_2d_poisson_init
   use case
@@ -249,7 +253,11 @@ endsubroutine init_xcompact3d
 !########################################################################
 subroutine finalise_xcompact3d()
 
-  use MPI
+#ifdef MPI3
+  USE MPI_f08
+#else
+  USE MPI
+#endif
   use decomp_2d
   use decomp_2d_poisson, only : decomp_2d_poisson_finalize
   use tools, only : simu_stats
@@ -294,7 +302,11 @@ endsubroutine finalise_xcompact3d
 !########################################################################
 subroutine catch_sigusr1
 
-  use MPI
+#ifdef MPI3
+  USE MPI_f08
+#else
+  USE MPI
+#endif
   use decomp_2d, only : decomp_2d_abort
   use param, only : itime, ilast
 
@@ -314,7 +326,11 @@ end subroutine catch_sigusr1
 !########################################################################
 subroutine catch_sigusr2
 
-  use MPI
+#ifdef MPI3
+  USE MPI_f08
+#else
+  USE MPI
+#endif
   use decomp_2d, only : decomp_2d_abort
   use param, only : itime, ilast, icheckpoint
 

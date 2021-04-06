@@ -228,7 +228,11 @@ contains
     subroutine Compute_Momentum_Source_Term_pointwise
 
         use decomp_2d, only: mytype, nproc, xstart, xend, xsize, update_halo
-        use MPI
+#ifdef MPI3
+        USE MPI_f08
+#else
+        USE MPI
+#endif
         use param, only: dx,dy,dz,eps_factor,xnu,istret,xlx,yly,zlz
         use var, only: ux1, uy1, uz1, FTx, FTy, FTz, yp
 

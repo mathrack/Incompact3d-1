@@ -1807,7 +1807,11 @@ contains
     USE variables
     USE param
     USE var
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE derivX 
     USE derivY 
     USE derivZ 

@@ -55,7 +55,11 @@ contains
   !
   subroutine visu_init()
 
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
     use decomp_2d, only : nrank, mytype, xszV, yszV, zszV

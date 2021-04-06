@@ -77,7 +77,11 @@ contains
     USE param
     USE variables
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -128,8 +132,11 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
-
+#endif
     USE var, only : mu1
 
     implicit none
@@ -391,7 +398,11 @@ contains
 
     USE decomp_2d
     USE decomp_2d_io
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     use param, only : iimplicit
 
@@ -608,7 +619,11 @@ contains
   subroutine dep(phi1,dep2)
 
     USE decomp_2d_io
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     use var, only : phi2
 
@@ -644,7 +659,11 @@ contains
   subroutine suspended(phi1,vol1,mp1)
 
     USE decomp_2d_io
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -672,7 +691,11 @@ contains
   subroutine depositrate ( dep2, dms1)
 
     USE decomp_2d_io
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     real(mytype),intent(in),dimension(ystart(1):yend(1),ystart(3):yend(3),numscalar) :: dep2
     real(mytype),intent(out) :: dms1(numscalar)
@@ -698,7 +721,11 @@ contains
   subroutine front ( phisum1, xp )
 
     USE decomp_2d_io
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: phisum1
     real(mytype),intent(out) :: xp(1:2,1:3)
@@ -730,7 +757,11 @@ contains
   subroutine front2d (phim3, xp)
 
     USE decomp_2d_io
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     real(mytype),intent(in),dimension(zstart(1):zend(1),zstart(2):zend(2)) :: phim3
     real(mytype),intent(out) :: xp(1:2,1:2)

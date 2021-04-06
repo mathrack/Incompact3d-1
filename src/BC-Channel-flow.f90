@@ -52,7 +52,11 @@ contains
     use decomp_2d_io
     use variables
     use param
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
 
     implicit none
 
@@ -185,7 +189,11 @@ contains
     use variables
     use param
     use var
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
 
     implicit none
 
@@ -222,7 +230,11 @@ contains
   !############################################################################
   subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1) !By Felipe Schuch
 
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
     use decomp_2d
     use decomp_2d_io
     use var, only : uvisu

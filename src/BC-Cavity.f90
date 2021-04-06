@@ -53,7 +53,6 @@ contains
   subroutine init_cavity (ux1,uy1,uz1,ep1,phi1)
 
     use decomp_2d_io
-    use MPI
 
     implicit none
 
@@ -196,7 +195,11 @@ contains
   !
   subroutine postprocess_cavity(ux,uy,uz,pp,phi)
 
+#ifdef MPI3
+    use MPI_f08
+#else
     use MPI
+#endif
     use var, only : nzmsize
 
     implicit none

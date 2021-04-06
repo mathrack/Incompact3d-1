@@ -13,12 +13,38 @@
 
 module decomp_2d
 
+#ifdef MPI3
+  use MPI_f08
+#else
   use MPI
+#endif
 
   implicit none
 
   private        ! Make everything private unless declared public
 
+#ifdef MPI3
+#ifdef DOUBLE_PREC
+  integer, parameter, public :: mytype = KIND(0.0D0)
+  type(mpi_datatype), parameter, public :: real_type = MPI_DOUBLE_PRECISION
+  type(mpi_datatype), parameter, public :: real2_type = MPI_2DOUBLE_PRECISION
+  type(mpi_datatype), parameter, public :: complex_type = MPI_DOUBLE_COMPLEX
+#ifdef SAVE_SINGLE
+  integer, parameter, public :: mytype_single = KIND(0.0)
+  type(mpi_datatype), parameter, public :: real_type_single = MPI_REAL
+#else
+  integer, parameter, public :: mytype_single = KIND(0.0D0)
+  type(mpi_datatype), parameter, public :: real_type_single = MPI_DOUBLE_PRECISION
+#endif
+#else
+  integer, parameter, public :: mytype = KIND(0.0)
+  type(mpi_datatype), parameter, public :: real_type = MPI_REAL
+  type(mpi_datatype), parameter, public :: real2_type = MPI_2REAL
+  type(mpi_datatype), parameter, public :: complex_type = MPI_COMPLEX
+  integer, parameter, public :: mytype_single = KIND(0.0)
+  type(mpi_datatype), parameter, public :: real_type_single = MPI_REAL
+#endif
+#else
 #ifdef DOUBLE_PREC
   integer, parameter, public :: mytype = KIND(0.0D0)
   integer, parameter, public :: real_type = MPI_DOUBLE_PRECISION
@@ -39,6 +65,7 @@ module decomp_2d
   integer, parameter, public :: mytype_single = KIND(0.0)
   integer, parameter, public :: real_type_single = MPI_REAL
 #endif
+#endif
 
   integer, save, public :: mytype_bytes
 
@@ -51,9 +78,15 @@ module decomp_2d
   ! parameters for 2D Cartesian topology 
   integer, save, dimension(2) :: dims, coord
   logical, save, dimension(2) :: periodic
+#ifdef MPI3
+  type(mpi_comm), save, public :: DECOMP_2D_COMM_CART_X, &
+       DECOMP_2D_COMM_CART_Y, DECOMP_2D_COMM_CART_Z
+  type(mpi_comm), save :: DECOMP_2D_COMM_ROW, DECOMP_2D_COMM_COL
+#else
   integer, save, public :: DECOMP_2D_COMM_CART_X, &
        DECOMP_2D_COMM_CART_Y, DECOMP_2D_COMM_CART_Z 
   integer, save :: DECOMP_2D_COMM_ROW, DECOMP_2D_COMM_COL
+#endif
 
   ! define neighboring blocks (to be used in halo-cell support)
   !  first dimension 1=X-pencil, 2=Y-pencil, 3=Z-pencil
@@ -92,37 +125,43 @@ module decomp_2d
 
      ! buffer counts, displacements and types for MPI_Alltoallw to transform
      ! directly between x- and z-pencils
-     integer, allocatable, dimension(:) :: xcnts_xz, xtypes_xzr, xtypes_xzc
-     integer, allocatable, dimension(:) :: zcnts_xz, ztypes_xzr, ztypes_xzc
+     integer, allocatable, dimension(:) :: xcnts_xz
+     integer, allocatable, dimension(:) :: zcnts_xz
      ! directly between x- and y-pencils
-     integer, allocatable, dimension(:) :: xcnts_xy, xtypes_xyr, xtypes_xyc
-     integer, allocatable, dimension(:) :: zcnts_xy, ztypes_xyr, ztypes_xyc
+     integer, allocatable, dimension(:) :: xcnts_xy
+     integer, allocatable, dimension(:) :: zcnts_xy
      ! directly between y- and z-pencils
-     integer, allocatable, dimension(:) :: xcnts_yz, xtypes_yzr, xtypes_yzc
-     integer, allocatable, dimension(:) :: zcnts_yz, ztypes_yzr, ztypes_yzc
+     integer, allocatable, dimension(:) :: xcnts_yz
+     integer, allocatable, dimension(:) :: zcnts_yz
 
 #ifdef MPI3                               
      ! use MPI_ADDRESS_KIND for MPI_Neighbor_alltoallw call
      ! x <=> z transpose
      integer(kind=MPI_ADDRESS_KIND), allocatable, dimension(:) :: xdispls_xz, zdispls_xz
-     integer :: xtozNeighborComm, ztoxNeighborComm
+     type(mpi_comm) :: xtozNeighborComm, ztoxNeighborComm
+     type(mpi_datatype), allocatable, dimension(:) :: xtypes_xzr, xtypes_xzc, ztypes_xzr, ztypes_xzc
      integer, allocatable, dimension(:) :: xranks_xz, zranks_xz
      ! x <=> y transpose
      integer(kind=MPI_ADDRESS_KIND), allocatable, dimension(:) :: xdispls_xy, zdispls_xy
-     integer :: xtoyNeighborComm, ytoxNeighborComm
+     type(mpi_comm) :: xtoyNeighborComm, ytoxNeighborComm
+     type(mpi_datatype), allocatable, dimension(:) :: xtypes_xyr, xtypes_xyc, ztypes_xyr, ztypes_xyc
      integer, allocatable, dimension(:) :: xranks_xy, zranks_xy
      ! y <=> z transpose
      integer(kind=MPI_ADDRESS_KIND), allocatable, dimension(:) :: xdispls_yz, zdispls_yz
-     integer :: ytozNeighborComm, ztoyNeighborComm
+     type(mpi_comm) :: ytozNeighborComm, ztoyNeighborComm
+     type(mpi_datatype), allocatable, dimension(:) :: xtypes_yzr, xtypes_yzc, ztypes_yzr, ztypes_yzc
      integer, allocatable, dimension(:) :: xranks_yz, zranks_yz
 #else                                     
      ! use default integer for MPI_Alltoallw call
      ! x <=> z transpose
      integer, allocatable, dimension(:) :: xdispls_xz, zdispls_xz
+     integer, allocatable, dimension(:) :: xtypes_xzr, xtypes_xzc, ztypes_xzr, ztypes_xzc
      ! x <=> y transpose
      integer, allocatable, dimension(:) :: xdispls_xy, zdispls_xy
+     integer, allocatable, dimension(:) :: xtypes_xyr, xtypes_xyc, ztypes_xyr, ztypes_xyc
      ! y <=> z transpose
      integer, allocatable, dimension(:) :: xdispls_yz, zdispls_yz
+     integer, allocatable, dimension(:) :: xtypes_yzr, xtypes_yzc, ztypes_yzr, ztypes_yzc
 #endif
 
      ! evenly distributed data

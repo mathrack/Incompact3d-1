@@ -5,7 +5,11 @@ PROGRAM post
   USE variables
   USE param
   USE var
+#ifdef MPI3
+  USE MPI_f08
+#else
   USE MPI
+#endif
   USE post_processing
 
   implicit none

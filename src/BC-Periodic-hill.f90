@@ -129,7 +129,6 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
-    USE MPI
 
     implicit none
 
@@ -138,8 +137,7 @@ contains
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,fh,ierror,ii,is,code
-    integer (kind=MPI_OFFSET_KIND) :: disp
+    integer :: k,j,i,ierror,ii,is,code
 
     integer, dimension (:), allocatable :: seed
 
@@ -220,7 +218,6 @@ contains
   !############################################################################
   subroutine postprocess_hill(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
-    USE MPI
     USE decomp_2d
     USE decomp_2d_io
     USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
@@ -247,7 +244,11 @@ contains
     USE variables
     USE param
     USE var
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 

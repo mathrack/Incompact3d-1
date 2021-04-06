@@ -93,7 +93,11 @@ subroutine transpose_z_to_y_real_start_s(src, dst, req)
 
   real(mytype), dimension(:,:,:), intent(IN) :: src
   real(mytype), dimension(:,:,:), intent(OUT) :: dst
+#ifdef MPI3
+  type(mpi_request), intent(out) :: req
+#else
   integer, intent(out) :: req
+#endif
 
   call transpose_z_to_y_real_start(src, dst, req, decomp_main)
 
@@ -106,7 +110,11 @@ subroutine transpose_z_to_y_real_start(src, dst, req, decomp)
   ! Arguments
   real(mytype), dimension(:,:,:), intent(IN) :: src
   real(mytype), dimension(:,:,:), intent(OUT) :: dst
+#ifdef MPI3
+  type(mpi_request), intent(out) :: req
+#else
   integer, intent(out) :: req
+#endif
   TYPE(DECOMP_INFO), intent(IN) :: decomp
 
   ! Local variable
@@ -132,7 +140,11 @@ subroutine transpose_z_to_y_complex_start_s(src, dst, req)
 
   complex(mytype), dimension(:,:,:), intent(IN) :: src
   complex(mytype), dimension(:,:,:), intent(OUT) :: dst
+#ifdef MPI3
+  type(mpi_request), intent(out) :: req
+#else
   integer, intent(out) :: req
+#endif
 
   call transpose_z_to_y_complex_start(src, dst, req, decomp_main)
 
@@ -145,7 +157,11 @@ subroutine transpose_z_to_y_complex_start(src, dst, req, decomp)
   ! Arguments
   complex(mytype), dimension(:,:,:), intent(IN) :: src
   complex(mytype), dimension(:,:,:), intent(OUT) :: dst
+#ifdef MPI3
+  type(mpi_request), intent(out) :: req
+#else
   integer, intent(out) :: req
+#endif
   TYPE(DECOMP_INFO), intent(IN) :: decomp
 
   ! Local variable

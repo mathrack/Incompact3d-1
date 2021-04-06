@@ -15,7 +15,11 @@
 module decomp_2d_io
 
   use decomp_2d
+#ifdef MPI3
+  use MPI_f08
+#else
   use MPI
+#endif
 #ifdef T3PIO
   use t3pio
 #endif
@@ -109,7 +113,13 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, fh, data_type, info, gs
+    integer :: ierror, info, gs
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_file) :: fh
+#else
+    integer :: data_type, newtype, fh
+#endif
 
     data_type = real_type
 
@@ -131,7 +141,13 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, fh, data_type, info, gs
+    integer :: ierror, info, gs
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_file) :: fh
+#else
+    integer :: data_type, newtype, fh
+#endif
 
     data_type = complex_type
 
@@ -156,7 +172,13 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, fh, data_type
+    integer :: ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_file) :: fh
+#else
+    integer :: data_type, newtype, fh
+#endif
     real(mytype_single), allocatable, dimension(:,:,:) :: varsingle
 
     data_type = real_type_single
@@ -236,7 +258,13 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, fh, data_type
+    integer :: ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_file) :: fh
+#else
+    integer :: data_type, newtype, fh
+#endif
 
     data_type = complex_type
 
@@ -255,7 +283,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
     real(mytype), dimension(:,:,:), intent(IN) :: var
@@ -263,7 +295,12 @@ contains
 
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, data_type
+    integer :: ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+#else
+    integer :: data_type, newtype
+#endif
 
     data_type = real_type
 
@@ -277,7 +314,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
     complex(mytype), dimension(:,:,:), intent(IN) :: var
@@ -285,7 +326,12 @@ contains
 
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, data_type
+    integer :: ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+#else
+    integer :: data_type, newtype
+#endif
 
     data_type = complex_type
 
@@ -299,7 +345,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ntimesteps 
     real(mytype), dimension(:,:,:), intent(IN) :: var
@@ -307,7 +357,12 @@ contains
 
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, data_type
+    integer :: ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+#else
+    integer :: data_type, newtype
+#endif
 
     data_type = real_type
 
@@ -326,7 +381,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
     real(mytype), dimension(:,:,:), intent(INOUT) :: var
@@ -334,7 +393,12 @@ contains
 
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, data_type
+    integer :: ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+#else
+    integer :: data_type, newtype
+#endif
 
     data_type = real_type
 
@@ -348,7 +412,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ipencil
     complex(mytype), dimension(:,:,:), intent(INOUT) :: var
@@ -356,7 +424,12 @@ contains
 
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, data_type
+    integer :: ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+#else
+    integer :: data_type, newtype
+#endif
 
     data_type = complex_type
 
@@ -370,7 +443,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: ntimesteps
     real(mytype), dimension(:,:,:), intent(INOUT) :: var
@@ -378,7 +455,12 @@ contains
 
     TYPE(DECOMP_INFO) :: decomp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: ierror, newtype, data_type
+    integer :: ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+#else
+    integer :: data_type, newtype
+#endif
 
     data_type = real_type
 
@@ -396,7 +478,11 @@ contains
 
     implicit none
 
-    integer, intent(IN) :: fh             ! file handle
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
+    integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), &
          intent(INOUT) :: disp            ! displacement
     integer, intent(IN) :: n              ! number of scalars
@@ -426,7 +512,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: n
     complex(mytype), dimension(n), intent(IN) :: var
@@ -454,7 +544,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: n
     integer, dimension(n), intent(IN) :: var
@@ -484,7 +578,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: n
     logical, dimension(n), intent(IN) :: var
@@ -519,7 +617,11 @@ contains
 
     implicit none
 
-    integer, intent(IN) :: fh             ! file handle
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
+    integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), &
          intent(INOUT) :: disp            ! displacement
     integer, intent(IN) :: n              ! number of scalars
@@ -544,7 +646,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: n
     complex(mytype), dimension(n), intent(INOUT) :: var
@@ -567,7 +673,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: n
     integer, dimension(n), intent(INOUT) :: var
@@ -592,7 +702,11 @@ contains
 
     implicit none
 
+#ifdef MPI3
+    type(mpi_file), intent(in) :: fh
+#else
     integer, intent(IN) :: fh
+#endif
     integer(KIND=MPI_OFFSET_KIND), intent(INOUT) :: disp
     integer, intent(IN) :: n
     logical, dimension(n), intent(INOUT) :: var
@@ -633,7 +747,13 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh, data_type
+    integer :: i,j,k, ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_file) :: fh
+#else
+    integer :: data_type, newtype, fh
+#endif
 
     data_type = real_type
 
@@ -660,7 +780,13 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh, data_type
+    integer :: i,j,k, ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_file) :: fh
+#else
+    integer :: data_type, newtype, fh
+#endif
 
     data_type = complex_type
 
@@ -711,7 +837,14 @@ contains
     real(mytype), allocatable, dimension(:,:,:) :: wk, wk2
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh, key,color,newcomm, data_type
+    integer :: i,j,k, ierror, key, color
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_comm) :: newcomm
+    type(mpi_file) :: fh
+#else
+    integer :: data_type, newtype, newcomm, fh
+#endif
     integer, dimension(3) :: xsz,ysz,zsz,xst,yst,zst,xen,yen,zen,skip
 
     data_type = real_type
@@ -737,7 +870,14 @@ contains
     complex(mytype), allocatable, dimension(:,:,:) :: wk, wk2
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh, key,color,newcomm, data_type
+    integer :: i,j,k, ierror, key, color
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_comm) :: newcomm
+    type(mpi_file) :: fh
+#else
+    integer :: data_type, newtype, newcomm, fh
+#endif
     integer, dimension(3) :: xsz,ysz,zsz,xst,yst,zst,xen,yen,zen,skip
 
     data_type = complex_type
@@ -763,7 +903,13 @@ contains
 
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh
+    integer :: i,j,k, ierror
+#ifdef MPI3
+    type(mpi_datatype) :: newtype
+    type(mpi_file) :: fh
+#else
+    integer :: newtype, fh
+#endif
 
     if (icoarse==1) then
        sizes(1) = xszS(1)
@@ -869,7 +1015,13 @@ contains
 
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(4) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh
+    integer :: i,j,k, ierror
+#ifdef MPI3
+    type(mpi_datatype) :: newtype
+    type(mpi_file) :: fh
+#else
+    integer :: newtype, fh
+#endif
 
 
     sizes(1) = xszP(1)
@@ -945,9 +1097,16 @@ contains
     real(mytype), allocatable, dimension(:,:,:) :: wk, wk2
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: color, key, errorcode, newcomm, ierror
-    integer :: newtype, fh, data_type, i, j, k
+    integer :: color, key, errorcode, ierror
+    integer :: i, j, k
     integer :: i1, i2, j1, j2, k1, k2
+#ifdef MPI3
+    type(mpi_file) :: fh
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_comm) :: newcomm
+#else
+    integer :: fh, data_type, newtype, newcomm
+#endif
 
     data_type = real_type
 

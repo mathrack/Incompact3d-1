@@ -123,11 +123,20 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
-    integer :: fh,code,ierr2,itest1
+#ifdef MPI3
+    type(mpi_file) :: fh
+#else
+    integer :: fh
+#endif
+    integer :: code,ierr2,itest1
     character(len=30) :: filename, filestart
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
 
@@ -216,7 +225,11 @@ subroutine force(ux1,uy1,ep1)
   USE param
   USE variables
   USE decomp_2d
+#ifdef MPI3
+  USE MPI_f08
+#else
   USE MPI
+#endif
 
   use var, only : ta1, tb1, tc1, td1, di1
   use var, only : ux2, uy2, ta2, tb2, tc2, td2, di2

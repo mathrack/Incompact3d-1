@@ -126,7 +126,11 @@ contains
   !********************************************************************
   subroutine boundary_conditions_jet (rho,ux,uy,uz,phi)
 
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE param
     USE variables
     USE decomp_2d
@@ -652,7 +656,11 @@ contains
     USE variables
     USE param
     USE var
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -707,7 +715,11 @@ contains
   !############################################################################
   subroutine postprocess_jet(ux1,uy1,uz1,phi1,ep1) !By Felipe Schuch
 
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE decomp_2d
     USE decomp_2d_io
     USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean

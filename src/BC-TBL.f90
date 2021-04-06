@@ -53,7 +53,6 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
-    USE MPI
 
     implicit none
 
@@ -62,8 +61,7 @@ contains
 
     real(mytype) :: y,r,um,r3,x,z,h,ct
     real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,fh,ierror,ii,is,it,code
-    integer (kind=MPI_OFFSET_KIND) :: disp
+    integer :: k,j,i,ierror,ii,is,it,code
 
     integer, dimension (:), allocatable :: seed
 
@@ -209,7 +207,11 @@ subroutine tbl_flrt (ux1,uy1,uz1)
   USE decomp_2d_poisson
   USE variables
   USE param
+#ifdef MPI3
+  USE MPI_f08
+#else
   USE MPI
+#endif
 
   implicit none
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
@@ -297,7 +299,6 @@ end subroutine tbl_flrt
     USE decomp_2d_io
     USE variables
     USE param
-    USE MPI
 
     implicit none
 
@@ -417,7 +418,6 @@ end subroutine tbl_flrt
   !############################################################################
   subroutine postprocess_tbl(ux1,uy1,uz1,ep1) !By Felipe Schuch
 
-    USE MPI
     USE decomp_2d
     USE decomp_2d_io
     USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean

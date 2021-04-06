@@ -298,7 +298,11 @@ contains
 !*******************************************************************
     use decomp_2d, only : mytype
     use param
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -534,7 +538,11 @@ contains
     !
     !********************************************************************
     use decomp_2d, only : mytype
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     
     implicit none
 
@@ -574,7 +582,11 @@ module ydiff_implicit
 !
 subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
 
+#ifdef MPI3
+  USE MPI_f08
+#else
   USE MPI
+#endif
   USE param
   USE variables
   USE var, ONLY: ta1, ta2, tb2, td2

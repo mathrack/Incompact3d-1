@@ -49,7 +49,11 @@ contains
     USE param, ONLY : u1, u2, dens1, dens2
     USE param, ONLY : half, one, two, four, eight, sixteen
     USE param, ONLY : ntime, nrhotime
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 

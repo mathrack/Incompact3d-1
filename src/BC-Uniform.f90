@@ -44,7 +44,6 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
-    USE MPI
 
     implicit none
 
@@ -104,7 +103,6 @@ contains
     USE param
     USE variables
     USE decomp_2d
-    USE MPI
 
     implicit none
 
@@ -135,7 +133,6 @@ contains
     USE param
     USE variables
     USE decomp_2d
-    USE MPI
     USE var, only: ux_inflow, uy_inflow, uz_inflow
   
     implicit none
@@ -201,7 +198,11 @@ contains
     USE param
     USE variables
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -249,7 +250,6 @@ contains
   !
   !*******************************************************************************
 
-    USE MPI
     USE decomp_2d
     USE decomp_2d_io
     USE var, only : umean,vmean,wmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean

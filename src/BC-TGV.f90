@@ -54,7 +54,11 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -199,7 +203,7 @@ contains
   !############################################################################
   subroutine init_post(ep1)
 
-    USE MPI
+    implicit none
 
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ep1
     real(mytype) :: dxdydz
@@ -251,11 +255,17 @@ contains
     USE decomp_2d
     USE decomp_2d_io
     USE variables, only: nx,ny,nz
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE var, only: nut1, srt_smag 
     USE var, only : uvisu
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+
+    implicit none
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1,ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -462,7 +472,11 @@ contains
   subroutine suspended(phi1,vol1,mp1)
 
     USE decomp_2d_io
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -530,7 +544,6 @@ contains
   subroutine error_tgv2D(ux1,uy1,phi1)
 
     USE decomp_2d
-    USE MPI
     USE param, only : one, two, xnu, ifirst, itime
     USE variables, only : numscalar, sc
 
@@ -820,7 +833,11 @@ contains
   subroutine error_L1_L2_Linf(err, l1, l2, linf)
 
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     
     implicit none
       

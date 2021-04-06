@@ -538,7 +538,11 @@ use actuator_line_model_utils ! used only for the trilinear interpolation
 USE param 
 USE decomp_2d
 use var
-use MPI
+#ifdef MPI3
+USE MPI_f08
+#else
+USE MPI
+#endif
 
         implicit none
         type(TurbineType),intent(inout) ::turbine

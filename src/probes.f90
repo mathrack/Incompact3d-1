@@ -30,7 +30,11 @@ contains
   !############################################################################
   subroutine init_probes(ep1)
 
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE decomp_2d, only : real_type
     USE param, only : dx, dy, dz, nclx, ncly, nclz, xlx, yly, zlz, istret, one, half
     USE variables, only : nxm, ny, yp, nym, ypi, nzm

@@ -158,7 +158,11 @@ contains
        nobjmax,yp,nraf)
     use param, only : zero,one
     use decomp_2d
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
     implicit none
     !
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
@@ -715,7 +719,11 @@ contains
   subroutine verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
        nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif)
     use decomp_2d
-    use MPI
+#ifdef MPI3
+    USE MPI_f08
+#else
+    USE MPI
+#endif
 
     implicit none
     !
@@ -997,7 +1005,11 @@ contains
     !
     USE complex_geometry
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     !
     implicit none
     !

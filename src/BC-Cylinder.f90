@@ -145,7 +145,11 @@ contains
     USE param
     USE variables
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -217,7 +221,11 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -292,7 +300,11 @@ contains
   !############################################################################
   subroutine postprocess_cyl(ux1,uy1,uz1,ep1) !By Felipe Schuch
 
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE decomp_2d
     USE decomp_2d_io
     USE var, only : uvisu

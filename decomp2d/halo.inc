@@ -29,12 +29,22 @@ logical :: global
 integer :: xs, ys, zs, xe, ye, ze
 
 integer :: i, j, k, s1, s2, s3, ierror
+#ifdef MPI3
+type(mpi_datatype) :: data_type
+#else
 integer :: data_type
+#endif
 
 integer :: icount, ilength, ijump 
-integer :: halo12, halo21, halo31, halo32                 
+#ifdef MPI3
+type(mpi_datatype) :: halo12, halo21, halo31, halo32
+type(mpi_request) :: requests(4)
+type(mpi_status) :: status(4)
+#else
+integer :: halo12, halo21, halo31, halo32
 integer, dimension(4) :: requests
 integer, dimension(MPI_STATUS_SIZE,4) :: status
+#endif
 integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
 data_type = real_type
@@ -62,12 +72,22 @@ logical :: global
 integer :: xs, ys, zs, xe, ye, ze
 
 integer :: i, j, k, s1, s2, s3, ierror
+#ifdef MPI3
+type(mpi_datatype) :: data_type
+#else
 integer :: data_type
+#endif
 
 integer :: icount, ilength, ijump 
-integer :: halo12, halo21, halo31, halo32                 
+#ifdef MPI3
+type(mpi_datatype) :: halo12, halo21, halo31, halo32
+type(mpi_request) :: requests(4)
+type(mpi_status) :: status(4)
+#else
+integer :: halo12, halo21, halo31, halo32
 integer, dimension(4) :: requests
 integer, dimension(MPI_STATUS_SIZE,4) :: status
+#endif
 integer :: tag_e, tag_w, tag_n, tag_s, tag_t, tag_b
 
 data_type = complex_type
