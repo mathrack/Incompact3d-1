@@ -1288,11 +1288,11 @@ contains
     ! x <=> y transpose
     decomp%xdispls_xy(:)=0
     decomp%zdispls_xy(:)=0
-    decomp%xcnts_xy(:)=0                                                                                 
+    decomp%xcnts_xy(:)=0
     decomp%zcnts_xy(:)=0
     decomp%xtypes_xyr(:)=MPI_INTEGER
     decomp%ztypes_xyr(:)=MPI_INTEGER
-    decomp%xtypes_xyc(:)=MPI_INTEGER                                                                     
+    decomp%xtypes_xyc(:)=MPI_INTEGER
     decomp%ztypes_xyc(:)=MPI_INTEGER
     ! y <=> z transpose
     decomp%xdispls_yz(:)=0
