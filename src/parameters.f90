@@ -498,11 +498,8 @@ subroutine parameter(input_i3d)
 #else
      print *,'Numerical precision: Single'
 #endif
-#ifdef SHM
-     print *, 'SHM flag activated'
-#endif
-#ifdef EVEN
-     print *, 'EVEN flag activated'
+#ifdef MPI3
+     print *, 'MPI3 flag activated'
 #endif
 #ifdef OCC
      print *, 'OCC flag activated'
