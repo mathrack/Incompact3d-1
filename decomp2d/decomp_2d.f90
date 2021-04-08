@@ -666,14 +666,6 @@ contains
     call MPI_COMM_FREE(decomp%ztoyNeighborComm,ierror)
     if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
 #endif
-#ifdef SHM
-    deallocate(decomp%x1disp_o,decomp%y1disp_o,decomp%y2disp_o, &
-         decomp%z2disp_o)
-    deallocate(decomp%x1cnts_s,decomp%y1cnts_s,decomp%y2cnts_s, &
-         decomp%z2cnts_s)
-    deallocate(decomp%x1disp_s,decomp%y1disp_s,decomp%y2disp_s, &
-         decomp%z2disp_s)
-#endif
 
     return
   end subroutine decomp_info_finalize
