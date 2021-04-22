@@ -845,7 +845,6 @@ contains
       tb1(:,:,:) = ux1(:,:,:) * tb1(:,:,:)
     endif
     if (skewsc) then
-      ! (1 - 0.5) * ux.dTdx + 0.5 * d(ux.T)dx
       tb1(:,:,:) = tb1(:,:,:) + half * (tc1(:,:,:) - tb1(:,:,:))
     endif
 
@@ -929,7 +928,6 @@ contains
        tb2(:,:,:) = uy2(:,:,:) * tc2(:,:,:)
     endif
     if (skewsc) then
-      ! (1-0.5) * uy.dTdy + 0.5 * d(uy.T)dy
       tb2(:,:,:) = tb2(:,:,:) + half * (te2(:,:,:) - tb2(:,:,:))
     endif
 
@@ -969,7 +967,6 @@ contains
       tb3(:,:,:) = uz3(:,:,:) * tb3(:,:,:)
     endif
     if (skewsc) then
-      ! (1-0.5) * uz.dTdz + 0.5 * d(uz.T)dz
       tb3(:,:,:) = tb3(:,:,:) + half * (tc3(:,:,:) - tb3(:,:,:))
     endif
 
