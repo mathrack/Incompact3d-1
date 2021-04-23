@@ -92,11 +92,13 @@ subroutine transpose_x_to_z_real_start_s(src, dst, req)
 
   implicit none
 
-  real(mytype), dimension(:,:,:), intent(IN) :: src
-  real(mytype), dimension(:,:,:), intent(OUT) :: dst
 #ifdef MPI3
+  real(mytype), dimension(:,:,:), intent(IN), asynchronous :: src
+  real(mytype), dimension(:,:,:), intent(OUT), asynchronous :: dst
   type(mpi_request), intent(out) :: req
 #else
+  real(mytype), dimension(:,:,:), intent(IN) :: src
+  real(mytype), dimension(:,:,:), intent(OUT) :: dst
   integer, intent(out) :: req
 #endif
 
@@ -109,11 +111,13 @@ subroutine transpose_x_to_z_real_start(src, dst, req, decomp)
   implicit none
 
   ! Arguments
-  real(mytype), dimension(:,:,:), intent(IN) :: src
-  real(mytype), dimension(:,:,:), intent(OUT) :: dst
 #ifdef MPI3
+  real(mytype), dimension(:,:,:), intent(IN), asynchronous :: src
+  real(mytype), dimension(:,:,:), intent(OUT), asynchronous :: dst
   type(mpi_request), intent(out) :: req
 #else
+  real(mytype), dimension(:,:,:), intent(IN) :: src
+  real(mytype), dimension(:,:,:), intent(OUT) :: dst
   integer, intent(out) :: req
 #endif
   TYPE(DECOMP_INFO), intent(IN) :: decomp
@@ -139,11 +143,13 @@ subroutine transpose_x_to_z_complex_start_s(src, dst, req)
 
   implicit none
 
-  complex(mytype), dimension(:,:,:), intent(IN) :: src
-  complex(mytype), dimension(:,:,:), intent(OUT) :: dst
 #ifdef MPI3
+  complex(mytype), dimension(:,:,:), intent(IN), asynchronous :: src
+  complex(mytype), dimension(:,:,:), intent(OUT), asynchronous :: dst
   type(mpi_request), intent(out) :: req
 #else
+  complex(mytype), dimension(:,:,:), intent(IN) :: src
+  complex(mytype), dimension(:,:,:), intent(OUT) :: dst
   integer, intent(out) :: req
 #endif
 
@@ -156,11 +162,13 @@ subroutine transpose_x_to_z_complex_start(src, dst, req, decomp)
   implicit none
 
   ! Arguments
-  complex(mytype), dimension(:,:,:), intent(IN) :: src
-  complex(mytype), dimension(:,:,:), intent(OUT) :: dst
 #ifdef MPI3
+  complex(mytype), dimension(:,:,:), intent(IN), asynchronous :: src
+  complex(mytype), dimension(:,:,:), intent(OUT), asynchronous :: dst
   type(mpi_request), intent(out) :: req
 #else
+  complex(mytype), dimension(:,:,:), intent(IN) :: src
+  complex(mytype), dimension(:,:,:), intent(OUT) :: dst
   integer, intent(out) :: req
 #endif
   TYPE(DECOMP_INFO), intent(IN) :: decomp
