@@ -127,11 +127,12 @@ contains
 #ifdef OCC
     integer :: code
 #ifdef MPI3
-    type(mpi_request) :: mpi_req(3)
-    type(mpi_status) :: mpi_stat(3)
+    type(mpi_request) :: mpi_req(6)
+    type(mpi_status) :: mpi_stat(6)
     mpi_stat(:)%MPI_ERROR = 0
 #else
-    integer :: mpi_req(3), mpi_stat(MPI_STATUS_SIZE, 3)
+    integer :: mpi_req(6), mpi_stat(MPI_STATUS_SIZE, 6)
+    mpi_stat(MPI_ERROR,:) = 0
 #endif
 
     call transpose_x_to_y_start(ux1,ux2,mpi_req(1))
@@ -182,11 +183,9 @@ contains
 #ifdef MPI3
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(1:3), code)
     if (code.ne.0 .or. any(mpi_stat(1:3)%MPI_ERROR.ne.0)) then
-      print *, "Error in MPI_WAIT: ", code, mpi_stat(1:3)%MPI_ERROR
 #else
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(:,1:3), code)
     if (code.ne.0 .or. any(mpi_stat(MPI_ERROR,1:3).ne.0)) then
-      print *, "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR,1:3)
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -247,11 +246,9 @@ contains
 #ifdef MPI3
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(1:3), code)
     if (code.ne.0 .or. any(mpi_stat(1:3)%MPI_ERROR.ne.0)) then
-      print *, "Error in MPI_WAIT: ", code, mpi_stat(1:3)%MPI_ERROR
 #else
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(:,1:3), code)
     if (code.ne.0 .or. any(mpi_stat(MPI_ERROR,1:3).ne.0)) then
-      print *, "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR,1:3)
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -330,6 +327,18 @@ contains
     endif
 
     !WORK Y-PENCILS
+#ifdef OCC
+    ! Convective and diffusive term of z-pencil
+    ! Warning : dux1(:,:,:,1), duy1(:,:,:,1) and duz1(:,:,:,1)
+    !           are used as temporary arrays
+    call transpose_z_to_x_start(td3,dux1(:,:,:,1),mpi_req(4))
+    call transpose_z_to_x_start(te3,duy1(:,:,:,1),mpi_req(5))
+    call transpose_z_to_x_start(tf3,duz1(:,:,:,1),mpi_req(6))
+    ! Convective term of y-pencil in tg2, th2, ti2 (half for skew-symmetric)
+    tg2(:,:,:) = - half * tg2(:,:,:)
+    th2(:,:,:) = - half * th2(:,:,:)
+    ti2(:,:,:) = - half * ti2(:,:,:)
+#else
     call transpose_z_to_y(td3,td2)
     call transpose_z_to_y(te3,te2)
     call transpose_z_to_y(tf3,tf2)
@@ -338,6 +347,7 @@ contains
     tg2(:,:,:) = td2(:,:,:) - half * tg2(:,:,:)
     th2(:,:,:) = te2(:,:,:) - half * th2(:,:,:)
     ti2(:,:,:) = tf2(:,:,:) - half * ti2(:,:,:)
+#endif
 
     !DIFFUSIVE TERMS IN Y
     if (iimplicit.le.0) then
@@ -431,9 +441,15 @@ contains
     endif
 
     !WORK X-PENCILS
+#ifdef OCC
+    call transpose_y_to_x_start(ta2,ta1,mpi_req(1))
+    call transpose_y_to_x_start(tb2,tb1,mpi_req(2))
+    call transpose_y_to_x_start(tc2,tc1,mpi_req(3))
+#else
     call transpose_y_to_x(ta2,ta1)
     call transpose_y_to_x(tb2,tb1)
     call transpose_y_to_x(tc2,tc1) !diff+conv. terms
+#endif
 
     !DIFFUSIVE TERMS IN X
     call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0)
@@ -449,6 +465,21 @@ contains
       te1(:,:,:) = xnu * te1(:,:,:)
       tf1(:,:,:) = xnu * tf1(:,:,:)
     endif
+
+#ifdef OCC
+#ifdef MPI3
+    call MPI_WAITALL(6, mpi_req(1:6), mpi_stat(1:6), code)
+    if (code.ne.0 .or. any(mpi_stat(1:6)%MPI_ERROR.ne.0)) then
+#else
+    call MPI_WAITALL(6, mpi_req(1:6), mpi_stat(:,1:6), code)
+    if (code.ne.0 .or. any(mpi_stat(MPI_ERROR,1:6).ne.0)) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+    ta1(:,:,:) = ta1(:,:,:) + dux1(:,:,:,1)
+    tb1(:,:,:) = tb1(:,:,:) + duy1(:,:,:,1)
+    tc1(:,:,:) = tc1(:,:,:) + duz1(:,:,:,1)
+#endif
 
     !FINAL SUM: DIFF TERMS + CONV TERMS
     dux1(:,:,:,1) = ta1(:,:,:) - half*tg1(:,:,:)  + td1(:,:,:)
@@ -833,6 +864,7 @@ contains
     mpi_stat%MPI_ERROR = 0
 #else
     integer :: mpi_req, mpi_stat(MPI_STATUS_SIZE)
+    mpi_stat(MPI_ERROR) = 0
 #endif
 
     call transpose_x_to_y_start(phi1,td2,mpi_req)
