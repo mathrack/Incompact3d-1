@@ -214,7 +214,7 @@ contains
     return
   end subroutine cor_vel
   !############################################################################
-  !subroutine DIVERGENCe
+  !subroutine DIVERGENCE
   !Calculation of div u* for nlock=1 and of div u^{n+1} for nlock=2
   ! input : ux1,uy1,uz1,ep1 (on velocity mesh)
   ! output : pp3 (on pressure mesh)
@@ -250,6 +250,18 @@ contains
     integer :: code
     real(mytype) :: tmax,tmoy,tmax1,tmoy1
 
+#ifdef OCC
+    integer :: ireq
+#ifdef MPI3
+    type(mpi_request) :: mpi_req(3)
+    type(mpi_status) :: mpi_stat(3)
+    mpi_stat(:)%MPI_ERROR = 0
+#else
+    integer :: mpi_req(3), mpi_stat(MPI_STATUS_SIZE,3)
+    mpi_stat(MPI_ERROR,:) = 0
+#endif
+#endif
+
     nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
     if (iibm.eq.0) then
@@ -280,28 +292,107 @@ contains
        pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:)
     endif
 
-    call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-    call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+#ifdef OCC
+    call transpose_x_to_y_start(pp1,duxdxp2,mpi_req(1),ph4)!->NXM NY NZ
+#endif
 
+    call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+#ifdef OCC
+    call transpose_x_to_y_start(pgy1,uyp2,mpi_req(2),ph4)
+#endif
+
+    call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+#ifdef OCC
+    call transpose_x_to_y_start(pgz1,uzp2,mpi_req(3),ph4)
+#endif
+
+#ifdef OCC
+    ireq = 1
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#else
     call transpose_x_to_y(pp1,duxdxp2,ph4)!->NXM NY NZ
     call transpose_x_to_y(pgy1,uyp2,ph4)
     call transpose_x_to_y(pgz1,uzp2,ph4)
+#endif
 
     !WORK Y-PENCILS
     call interyvp(upi2,duxdxp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
-    call deryvp(duydypi2,uyp2,dipp2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
 
+#ifdef OCC
+    ireq = 2
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#endif
+
+    call deryvp(duydypi2,uyp2,dipp2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
     !! Compute sum dudx + dvdy
     duydypi2(:,:,:) = duydypi2(:,:,:) + upi2(:,:,:)
 
+#ifdef OCC
+    call transpose_y_to_z_start(duydypi2,duxydxyp3,mpi_req(2),ph3)
+    ireq = 3
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#endif
+
     call interyvp(upi2,uzp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
 
+#ifdef OCC
+    call transpose_y_to_z_start(upi2,uzp3,mpi_req(3),ph3)
+    ireq = 2
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#else
     call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ
     call transpose_y_to_z(upi2,uzp3,ph3)
+#endif
 
     !WORK Z-PENCILS
     call interzvp(pp3,duxydxyp3,dipp3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&
          (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,1)
+
+#ifdef OCC
+    ireq = 3
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#endif
+
     call derzvp(po3,uzp3,dipp3,sz,cfz6,csz6,cwz6,(ph1%zen(1)-ph1%zst(1)+1),&
          (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,0)
 
@@ -374,33 +465,124 @@ contains
     real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
 
+#ifdef OCC
+    integer :: ireq, code
+#ifdef MPI3
+    type(mpi_request) :: mpi_req(3)
+    type(mpi_status) :: mpi_stat(3)
+    mpi_stat(:)%MPI_ERROR = 0
+#else
+    integer :: mpi_req(3), mpi_stat(MPI_STATUS_SIZE,3)
+    mpi_stat(MPI_ERROR,:) = 0
+#endif
+#endif
+
     !WORK Z-PENCILS
     call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
          (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+
+#ifdef OCC
+    call transpose_z_to_y_start(ppi3,pp2,mpi_req(1),ph3)!->NXM NYM NZ
+#endif
+
     call derzpv(pgz3,pp3,dip3,sz,cfip6z,csip6z,cwip6z,cfz6,csz6,cwz6,&
          (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
 
-    !WORK Y-PENCILS
+#ifdef OCC
+    call transpose_z_to_y_start(pgz3,pgz2,mpi_req(2),ph3)!->NXM NYM NZ
+    ireq = 1
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#else
     call transpose_z_to_y(pgz3,pgz2,ph3) !nxm nym nz
     call transpose_z_to_y(ppi3,pp2,ph3)
+#endif
 
     call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+
+#ifdef OCC
+    call transpose_y_to_x_start(ppi2,pp1,mpi_req(1),ph2)!->NXM NY NZ
+#endif
+
     call derypv(pgy2,pp2,dip2,sy,cfip6y,csip6y,cwip6y,cfy6,csy6,cwy6,ppy,&
          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+
+#ifdef OCC
+    call transpose_y_to_x_start(pgy2,pgy1,mpi_req(3),ph2)
+    ireq = 2
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#endif
+
     call interypv(pgzi2,pgz2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
 
     !WORK X-PENCILS
-
+#ifdef OCC
+    call transpose_y_to_x_start(pgzi2,pgz1,mpi_req(2),ph2)
+    ireq = 1
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#else
     call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
     call transpose_y_to_x(pgy2,pgy1,ph2)
     call transpose_y_to_x(pgzi2,pgz1,ph2)
+#endif
 
     call derxpv(px1,pp1,di1,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
+
+#ifdef OCC
+    ireq = 3
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#endif
+
     call interxpv(py1,pgy1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
+
+#ifdef OCC
+    ireq = 2
+#ifdef MPI3
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
+    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+#else
+    call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
+    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+#endif
+      call decomp_2d_abort(code,"MPI_WAIT")
+    endif
+#endif
+
     call interxpv(pz1,pgz1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
 
