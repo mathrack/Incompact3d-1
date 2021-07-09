@@ -69,7 +69,6 @@ contains
   !
   subroutine init_probes()
 
-    USE decomp_2d, only : real_type
 #ifdef MPI3
     USE MPI_f08
 #else
