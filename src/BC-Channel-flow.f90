@@ -49,10 +49,7 @@ contains
   !############################################################################
   subroutine init_channel (ux1,uy1,uz1,ep1,phi1)
 
-    use decomp_2d
     use decomp_2d_io
-    use variables
-    use param
 #ifdef MPI3
     USE MPI_f08
 #else
@@ -61,85 +58,107 @@ contains
 
     implicit none
 
+    ! Arguments
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(out) :: ux1,uy1,uz1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar), intent(out) :: phi1
 
+    ! Local variables
+    logical :: read_from_file
     real(mytype) :: y, um
-    integer :: k, j, i, ii, code
+    integer :: k, j, i, is, code
 
-    if (iscalar==1) then
-      if (nrank.eq.0) print *,'Imposing linear temperature profile'
-      do k=1,xsize(3)
-         do j=1,xsize(2)
-            if (istret.eq.0) y=real(j+xstart(2)-2,mytype)*dy
-            if (istret.ne.0) y=yp(j+xstart(2)-1)
-            do i=1,xsize(1)
-               phi1(i,j,k,:) = one - y/yly
-            enddo
-         enddo
-      enddo
+    !
+    ! Simulation can start from a 3D snapshot
+    !
+    if (nrank.eq.0) inquire(file="channel_init_ux", exist=read_from_file)
+    call MPI_BCAST(read_from_file,1,MPI_LOGICAL,0,MPI_COMM_WORLD,code)
+    if (code.ne.0) call decomp_2d_abort(code, "MPI_BCAST")
+    if (read_from_file) then
 
-      if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
-        !! Generate a hot patch on bottom boundary
-        phi1(:,1,:,:) = one
-      endif
-      if ((nclySn.eq.2).and.(xend(2).eq.ny)) then
-        phi1(:,xsize(2),:,:) = zero
-      endif
-    endif
+       if (nrank.eq.0) print *, "Channel: init from snapshot."
+       call decomp_2d_read_one(1,ux1,"channel_init_ux")
+       call decomp_2d_read_one(1,uy1,"channel_init_uy")
+       call decomp_2d_read_one(1,uz1,"channel_init_uz")
+       if (iscalar.eq.1) then
+          call decomp_2d_read_one(1,phi1(:,:,:,1),"channel_init_t")
+          if (numscalar.gt.1) then
+             phi1(:,:,:,2:numscalar) = zero
+          endif
+       endif
 
-    ux1=zero;uy1=zero;uz1=zero
-    if (iin.ne.0) then
-       call system_clock(count=code)
-       if (iin.eq.2) code=0
-       call random_seed(size = ii)
-       call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, ii) /))
+    else
 
-       call random_number(ux1)
-       call random_number(uy1)
-       call random_number(uz1)
-    endif
+       if (iscalar==1) then
+          if (nrank.eq.0) print *,'Imposing linear temperature profile'
+          do k=1,xsize(3)
+             do j=1,xsize(2)
+                if (istret.eq.0) y=real(j+xstart(2)-2,mytype)*dy
+                if (istret.ne.0) y=yp(j+xstart(2)-1)
+                do i=1,xsize(1)
+                   phi1(i,j,k,:) = one - y/yly
+                enddo
+             enddo
+          enddo
 
-    !modulation of the random noise + initial velocity profile
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
-          if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
-          um=exp(-zptwo*y*y)
-          do i=1,xsize(1)
-             ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
-             uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-             uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+          if ((nclyS1.eq.2).and.(xstart(2).eq.1)) then
+             !! Generate a hot patch on bottom boundary
+             phi1(:,1,:,:) = one
+          endif
+          if ((nclySn.eq.2).and.(xend(2).eq.ny)) then
+             phi1(:,xsize(2),:,:) = zero
+          endif
+       endif
+
+       ux1=zero;uy1=zero;uz1=zero
+       if (iin.ne.0) then
+          call system_clock(count=code)
+          if (iin.eq.2) code=0
+          call random_seed(size = j)
+          call random_seed(put = code+63946*nrank*(/ (i - 1, i = 1, j) /))
+
+          call random_number(ux1)
+          call random_number(uy1)
+          call random_number(uz1)
+       endif
+
+       !modulation of the random noise + initial velocity profile
+       do k=1,xsize(3)
+          do j=1,xsize(2)
+             if (istret.eq.0) y=real(j+xstart(2)-1-1,mytype)*dy-yly/two
+             if (istret.ne.0) y=yp(j+xstart(2)-1)-yly/two
+             um=exp(-zptwo*y*y)
+             do i=1,xsize(1)
+                ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+                uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+                uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+             enddo
           enddo
        enddo
-    enddo
 
-    !INIT FOR G AND U=MEAN FLOW + NOISE
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
-             uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
-             uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
+       !INIT FOR G AND U=MEAN FLOW + NOISE
+       do k=1,xsize(3)
+          do j=1,xsize(2)
+             do i=1,xsize(1)
+                ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
+                uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
+                uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
+             enddo
           enddo
        enddo
-    enddo
+
+    endif
 
 #ifdef DEBG
     if (nrank .eq. 0) print *,'# init end ok'
 #endif
 
-    return
   end subroutine init_channel
   !############################################################################
   !############################################################################
   subroutine boundary_conditions_channel (ux,uy,uz,phi)
 
-    use param
     use var, only : di2
-    use variables
-    use decomp_2d
 
     implicit none
 
@@ -225,19 +244,18 @@ contains
     real(mytype), intent(in) :: constant
 
     integer :: code, i, j, k, jloc
-    real(mytype) :: can, ub, uball, coeff
+    real(mytype) :: can, ub, coeff
 
-    uball = zero
     coeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
 
     ub = channel_local_average(ux) * coeff
 
-    call MPI_ALLREDUCE(ub,uball,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    call MPI_ALLREDUCE(MPI_IN_PLACE,ub,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
     if (code.ne.0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
-    can = - (constant - uball)
+    can = - (constant - ub)
 
-    if (nrank==0) print *, nrank, 'UT', uball, can
+    if (nrank==0) print *, nrank, 'UT', ub, can
 
     do k=1,xsize(3)
       do j=1,xsize(2)
@@ -427,8 +445,6 @@ contains
   !############################################################################
   subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,yp,remp)
 
-    use decomp_2d, only : mytype
-    use param, only : zero, one, two
     use ibm
 
     implicit none
