@@ -190,6 +190,18 @@ subroutine init_xcompact3d()
      if (nrank==0) print*, 'Program is run with the provided file -->', InputFN
   endif
 
+#ifdef ADIOS2
+  if (nrank .eq. 0) then
+     print *, " WARNING === WARNING === WARNING === WARNING === WARNING"
+     print *, " WARNING: Running Xcompact3d with ADIOS2"
+     print *, "          this is currently experimental"
+     print *, "          for safety of results it is recommended"
+     print *, "          to run the default build as this feature"
+     print *, "          is developed. Thank you for trying it."
+     print *, " WARNING === WARNING === WARNING === WARNING === WARNING"
+  endif
+#endif
+  
   call parameter(InputFN)
 
   call decomp_2d_init(nx,ny,nz,p_row,p_col)
@@ -289,6 +301,7 @@ subroutine finalise_xcompact3d()
   use ydiff_implicit, only : finalize_implicit
   use case, only : finalize_case
   use probes, only : finalize_probes
+  use visu, only : finalize_visu
 
   implicit none
 
@@ -310,6 +323,7 @@ subroutine finalise_xcompact3d()
   if (iimplicit.ne.0) call finalize_implicit()
   call finalize_case()
   call finalize_probes()
+  call finalize_visu()
   call finalize_variables()
   call decomp_info_finalize(ph1)
   call decomp_info_finalize(ph4)

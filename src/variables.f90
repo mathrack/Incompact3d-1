@@ -59,7 +59,8 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: uxm2, uym2, phim2, prem2, dissm2
 
   !arrays for statistic collection
-  real(mytype), save, allocatable, dimension(:,:,:) :: umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+  real(mytype), save, allocatable, dimension(:,:,:) :: umean,vmean,wmean,pmean,tmean
+  real(mytype), save, allocatable, dimension(:,:,:) :: uumean,vvmean,wwmean,uvmean,uwmean,vwmean, ppmean
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phimean,phiphimean,uphimean,vphimean,wphimean
   real(mytype), save, allocatable, dimension(:,:,:) :: tik1,tik2,tak1,tak2
   real(mytype), save, allocatable, dimension(:,:,:) :: u1sum_tik,u1sum_tak
@@ -244,19 +245,22 @@ contains
 
     !arrays statistics
     if (ilast.ge.initstat) then
+      ! Experimental when flag_3D_IO is .false. (requires nstat=1)
+      !xenS(1) = xstS(1)
       allocate (umean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-      allocate (vmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-      allocate (wmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-      allocate (pmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-      allocate (uumean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-      allocate (vvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-      allocate (wwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-      allocate (uvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-      allocate (uwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
-      allocate (vwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (vmean, mold=umean)
+      allocate (wmean, mold=umean)
+      allocate (pmean, mold=umean)
+      allocate (uumean, mold=umean)
+      allocate (vvmean, mold=umean)
+      allocate (wwmean, mold=umean)
+      allocate (uvmean, mold=umean)
+      allocate (uwmean, mold=umean)
+      allocate (vwmean, mold=umean)
+      allocate (ppmean, mold=umean)
       allocate (phimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
-      allocate (phiphimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
-      allocate (tmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+      allocate (phiphimean, mold=phimean)
+      allocate (tmean, mold=umean)
     endif
 
     !Y PENCILS
@@ -633,7 +637,7 @@ contains
 
     if (ilast.ge.initstat) then
       deallocate(umean,vmean,wmean,pmean)
-      deallocate(uumean,vvmean,wwmean,uvmean,uwmean,vwmean)
+      deallocate(uumean,vvmean,wwmean,uvmean,uwmean,vwmean,ppmean)
       deallocate(phimean,phiphimean,tmean)
     endif
 
