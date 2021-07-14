@@ -52,6 +52,11 @@ contains
   !
   subroutine init_cavity (ux1,uy1,uz1,ep1,phi1)
 
+#ifdef MPI3 
+    use MPI_f08
+#else
+    use MPI
+#endif
     use decomp_2d_io
 
     implicit none
