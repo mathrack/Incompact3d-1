@@ -230,8 +230,6 @@ contains
   !############################################################################
   subroutine channel_cfr (ux, constant)
 
-    use decomp_2d_poisson
-    use var
 #ifdef MPI3
     USE MPI_f08
 #else
