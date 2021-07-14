@@ -529,6 +529,7 @@ subroutine parameter(input_i3d)
 #endif
 #ifdef MPI3
      print *, 'MPI3 flag activated'
+#endif
 #ifdef ADIOS2
      print *, 'ADIOS2 flag detected'
 #endif

@@ -825,7 +825,13 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh, data_type
+    integer :: i,j,k, ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_file) :: fh
+#else
+    integer :: newtype, fh, data_type
+#endif
 
     data_type = real_type
 
@@ -847,7 +853,13 @@ contains
     TYPE(DECOMP_INFO) :: decomp
     integer(kind=MPI_OFFSET_KIND) :: filesize, disp
     integer, dimension(3) :: sizes, subsizes, starts
-    integer :: i,j,k, ierror, newtype, fh, data_type
+    integer :: i,j,k, ierror
+#ifdef MPI3
+    type(mpi_datatype) :: data_type, newtype
+    type(mpi_file) :: fh
+#else
+    integer :: newtype, fh, data_type
+#endif
 
     data_type = complex_type
 
