@@ -350,7 +350,7 @@ subroutine catch_sigusr1
   catching_signal = 1
 
 end subroutine catch_sigusr1
-#
+!
 subroutine catch_sigusr2
 
   use decomp_2d, only : nrank
@@ -362,7 +362,7 @@ subroutine catch_sigusr2
   catching_signal = 2
 
 end subroutine catch_sigusr2
-#
+!
 subroutine catch_signal
 
 #ifdef MPI3
