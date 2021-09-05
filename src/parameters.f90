@@ -39,7 +39,11 @@
 !###########################################################################
 subroutine parameter(input_i3d)
 
+#ifdef MPI3
+  use MPI_f08
+#else
   use mpi
+#endif
 
   use iso_fortran_env
 
