@@ -67,7 +67,7 @@ contains
     real(mytype) :: T1, T2, rhomin, rhomax
     real(mytype) :: disturb_decay, u_disturb, v_disturb
 
-    if (iin.eq.0) then !empty domain
+    if (iin == 0) then !empty domain
        if (nrank==0) then
           write(*,*) "Empty initial domain!"
        endif
@@ -75,7 +75,7 @@ contains
        ux1=zero; uy1=zero; uz1=zero
     endif
 
-    if (iin.eq.1) then !generation of a random noise
+    if (iin == 1) then !generation of a random noise
        if (nrank==0) then
           write(*,*) "Filled initial domain!"
        endif
@@ -136,7 +136,7 @@ contains
     endif
 
 #ifdef DEBG
-    if (nrank .eq. 0) print *,'# init end ok'
+    if (nrank  ==  0) print *,'# init end ok'
 #endif
 
     return

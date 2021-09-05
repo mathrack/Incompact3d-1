@@ -393,28 +393,28 @@ contains
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., &  ! do not reorder rank
          DECOMP_2D_COMM_CART_X, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_z
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Y, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_y
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Z, ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
 
     call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
 
     ! derive communicators defining sub-groups for ALLTOALL(V)
     call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
          DECOMP_2D_COMM_COL,ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
     call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
          DECOMP_2D_COMM_ROW,ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
 
     ! gather information for halo-cell support code
     call init_neighbour
@@ -439,7 +439,7 @@ contains
     ! do not use 'mytype' which is compiler dependent
     ! also possible to use inquire(iolength=...) 
     call MPI_TYPE_SIZE(real_type,mytype_bytes,ierror)
-    if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
 
     return
   end subroutine decomp_2d_init
@@ -1804,15 +1804,15 @@ contains
                .false., DECOMP_2D_COMM_CART_Z, ierror)
           if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
           call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-          if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
 
           ! communicators defining sub-groups for ALLTOALL(V)
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
                DECOMP_2D_COMM_COL,ierror)
-          if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
                DECOMP_2D_COMM_ROW,ierror)
-          if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
 
           ! generate 2D decomposition information for this row*col
           call decomp_info_init(nx_global,ny_global,nz_global,decomp)
@@ -1844,7 +1844,7 @@ contains
 
           call MPI_ALLREDUCE(t2,t1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
                MPI_COMM_WORLD,ierror)
-          if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
           t1 = t1 / dble(nproc)
 
           if (nrank==0) then

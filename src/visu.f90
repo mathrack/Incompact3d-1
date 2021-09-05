@@ -57,7 +57,7 @@ module visu
 #endif
 
   private
-  public :: output2D, visu_init, finalize_visu, write_snapshot, end_snapshot, write_field
+  public :: output2D, visu_init, visu_finalise, write_snapshot, end_snapshot, write_field
 
 contains
 
@@ -108,16 +108,16 @@ contains
 
       nsnapout = 4
       if (ilmn)         nsnapout = nsnapout + 1
-      if (iscalar.ne.0) nsnapout = nsnapout + numscalar
+      if (iscalar /= 0) nsnapout = nsnapout + numscalar
 
       memout = prec * nsnapout * noutput
-      if (output2D.eq.0) then
+      if (output2D == 0) then
         memout = memout * xszV(1) * yszV(2) * zszV(3)
-      else if (output2D.eq.1) then
+      else if (output2D == 1) then
         memout = memout *           yszV(2) * zszV(3)
-      else if (output2D.eq.2) then
+      else if (output2D == 2) then
         memout = memout * xszV(1)           * zszV(3)
-      else if (output2D.eq.3) then
+      else if (output2D == 3) then
         memout = memout * xszV(1) * yszV(2)
       endif
       print *,'==========================================================='
@@ -126,9 +126,9 @@ contains
     end if
 
     ! Safety check
-    if (output2D.lt.0 .or. output2D.gt.3 &
-        .or. (output2d.eq.2.and.istret.ne.0)) then
-      if (nrank.eq.0) print *, "Visu module: incorrect value for output2D."
+    if (output2D < 0 .or. output2D > 3 &
+        .or. (output2d == 2.and.istret /= 0)) then
+      if (nrank == 0) print *, "Visu module: incorrect value for output2D."
       call MPI_ABORT(MPI_COMM_WORLD, 0, noutput)
       stop
     endif
@@ -138,15 +138,15 @@ contains
     adios2_debug_mode = .true.
 
     call adios2_init(adios, trim(config_file), MPI_COMM_WORLD, adios2_debug_mode, code)
-    if (code.ne.0) then
+    if (code /= 0) then
        print *, "Error initialising ADIOS2 - is adios2_config.xml present and valid?"
        call decomp_2d_abort(code, "ADIOS2_INIT")
     endif
     call adios2_declare_io(io_write_real_coarse, adios, "solution-io", code)
-    if (code.ne.0) call decomp_2d_abort(code, "ADIOS2_DECLARE_IO")
-    if (io_write_real_coarse % engine_type.eq."BP4") then
+    if (code /= 0) call decomp_2d_abort(code, "ADIOS2_DECLARE_IO")
+    if (io_write_real_coarse % engine_type == "BP4") then
        write(outfile, *) "data.bp4"
-    else if (io_write_real_coarse % engine_type.eq."HDF5") then
+    else if (io_write_real_coarse % engine_type == "HDF5") then
        write(outfile, *) "data.hdf5"
     else
        print *, "Unknown engine!"
@@ -161,14 +161,14 @@ contains
     if (ilmn) then
        call adios2_register_variable(io_write_real_coarse, "rho", 1, 2)
     endif
-    if (iscalar.ne.0) then
+    if (iscalar /= 0) then
        do is = 1, numscalar
           call adios2_register_variable(io_write_real_coarse, "phi"//char(48+is), 1, 2)
        enddo
     endif
     
     call adios2_open(engine_write_real_coarse, io_write_real_coarse, trim(outfile), adios2_mode_write, code)
-    if (code.ne.0) then call decomp_2d_abort(code, "ADIOS2_OPEN")
+    if (code /= 0) then call decomp_2d_abort(code, "ADIOS2_OPEN")
 #endif
 
   end subroutine visu_init
@@ -177,12 +177,11 @@ contains
   ! Finalise the visu module
   ! - Currently only needed to clean up ADIOS2
   !
-  subroutine finalize_visu()
+  subroutine visu_finalise()
     
 #ifdef ADIOS2
     use adios2
 #endif
-
   implicit none
 
 #ifdef ADIOS2
@@ -191,12 +190,12 @@ contains
   
 #ifdef ADIOS2
     call adios2_close(engine_write_real_coarse, code)
-    if (code.ne.0) then call decomp_2d_abort(code, "ADIOS2_CLOSE")
+    if (code /= 0) then call decomp_2d_abort(code, "ADIOS2_CLOSE")
     call adios2_finalize(adios, code)
-    if (code.ne.0) then call decomp_2d_abort(code, "ADIOS2_FINALIZE")
+    if (code /= 0) then call decomp_2d_abort(code, "ADIOS2_FINALIZE")
 #endif
     
-  end subroutine finalize_visu
+  end subroutine visu_finalise
 
   !
   ! Write a snapshot
@@ -237,13 +236,13 @@ contains
     character(len=30) :: scname
 
     ! Update log file
-    if (nrank.eq.0) then
+    if (nrank == 0) then
       call cpu_time(tstart)
       print *,'Writing snapshots =>',itime/ioutput
     end if
 #ifdef ADIOS2
     call adios2_begin_step(engine_write_real_coarse, adios2_step_mode_append, code)
-    if (code.ne.0) call decomp_2d_abort(code, "ADIOS2_BEGIN_STEP")
+    if (code /= 0) call decomp_2d_abort(code, "ADIOS2_BEGIN_STEP")
 #endif
 
     ! Snapshot number
@@ -291,7 +290,7 @@ contains
     if (ilmn) call write_field(rho1(:,:,:,1), ".", "rho", trim(num))
 
     ! Write scalars
-    if (iscalar.ne.0) then
+    if (iscalar /= 0) then
       do is = 1, numscalar
         write(scname,"('phi',I2.2)") is
         call write_field(phi1(:,:,:,is), ".", trim(scname), trim(num), .true.)
@@ -347,11 +346,11 @@ contains
 
 #ifdef ADIOS2
     call adios2_end_step(engine_write_real_coarse, code)
-    if (code.ne.0) call decomp_2d_abort(code, "ADIOS2_END_STEP")
+    if (code /= 0) call decomp_2d_abort(code, "ADIOS2_END_STEP")
 #endif
 
     ! Update log file
-    if (nrank.eq.0) then
+    if (nrank == 0) then
       call cpu_time(tend)
       write(*,'(" Time for writing snapshots (s): ",F12.8)') tend-tstart
     endif
@@ -401,14 +400,14 @@ contains
 
     pre1=tb1
 
-    if (save_pre.eq.1) then
+    if (save_pre == 1) then
       uvisu = zero
       call fine_to_coarseV(1,pre1,uvisu)
       write(filename,"('./data/pre',I4.4)") itime/ioutput
       call decomp_2d_write_one(1,uvisu,filename,2)
     endif
 
-    if (save_prem.eq.1) then
+    if (save_prem == 1) then
       write(filename,"('./data/prem',I4.4)") itime/ioutput
       call decomp_2d_write_plane(1,pre1,3,-1,filename)
     endif
@@ -436,14 +435,14 @@ contains
     integer :: i,k
     real(mytype) :: xp(xszV(1)), zp(zszV(3))
 
-    if (nrank.eq.0) then
+    if (nrank == 0) then
       OPEN(newunit=ioxdmf,file="./data/"//pathname//"/"//filename//'-'//num//'.xdmf')
 
       write(ioxdmf,'(A22)')'<?xml version="1.0" ?>'
       write(ioxdmf,*)'<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
       write(ioxdmf,*)'<Xdmf xmlns:xi="http://www.w3.org/2001/XInclude" Version="2.0">'
       write(ioxdmf,*)'<Domain>'
-      if (istret.ne.0) then
+      if (istret /= 0) then
         do i=1,xszV(1)
           xp(i) = real(i-1,mytype)*dx*nvisu
         enddo
@@ -451,18 +450,18 @@ contains
           zp(k) = real(k-1,mytype)*dz*nvisu
         enddo
         write(ioxdmf,*)'    <Topology name="topo" TopologyType="3DRectMesh"'
-        if (output2D.eq.0) then
+        if (output2D == 0) then
           write(ioxdmf,*)'        Dimensions="',zszV(3),yszV(2),xszV(1),'">'
-        else if (output2D.eq.1) then
+        else if (output2D == 1) then
           write(ioxdmf,*)'        Dimensions="',zszV(3),yszV(2),1,'">'
-        else if (output2D.eq.2) then
+        else if (output2D == 2) then
           write(ioxdmf,*)'        Dimensions="',zszV(3),1,xszV(1),'">'
-        else if (output2D.eq.3) then
+        else if (output2D == 3) then
           write(ioxdmf,*)'        Dimensions="',1,yszV(2),xszV(1),'">'
         endif
         write(ioxdmf,*)'    </Topology>'
         write(ioxdmf,*)'    <Geometry name="geo" Type="VXVYVZ">'
-        if (output2D.ne.1) then
+        if (output2D /= 1) then
           write(ioxdmf,*)'        <DataItem Dimensions="',xszV(1),'" NumberType="Float" Precision="4" Format="XML">'
           write(ioxdmf,*)'        ',xp(:)
         else
@@ -470,7 +469,7 @@ contains
           write(ioxdmf,*)'        ',xp(1)
         endif
         write(ioxdmf,*)'        </DataItem>'
-        if (output2D.ne.2) then
+        if (output2D /= 2) then
           write(ioxdmf,*)'        <DataItem Dimensions="',yszV(2),'" NumberType="Float" Precision="4" Format="XML">'
           write(ioxdmf,*)'        ',yp(ystV(1)::nvisu)
         else
@@ -478,7 +477,7 @@ contains
           write(ioxdmf,*)'        ',yp(1)
         endif
         write(ioxdmf,*)'        </DataItem>'
-        if (output2D.ne.3) then
+        if (output2D /= 3) then
           write(ioxdmf,*)'        <DataItem Dimensions="',zszV(3),'" NumberType="Float" Precision="4" Format="XML">'
           write(ioxdmf,*)'        ',zp(:)
         else
@@ -489,13 +488,13 @@ contains
         write(ioxdmf,*)'    </Geometry>'
       else
         write(ioxdmf,*)'    <Topology name="topo" TopologyType="3DCoRectMesh"'
-        if (output2D.eq.0) then
+        if (output2D == 0) then
           write(ioxdmf,*)'        Dimensions="',zszV(3),yszV(2),xszV(1),'">'
-        else if (output2D.eq.1) then
+        else if (output2D == 1) then
           write(ioxdmf,*)'        Dimensions="',zszV(3),yszV(2),1,'">'
-        else if (output2D.eq.2) then
+        else if (output2D == 2) then
           write(ioxdmf,*)'        Dimensions="',zszV(3),1,xszV(1),'">'
-        else if (output2D.eq.3) then
+        else if (output2D == 3) then
           write(ioxdmf,*)'        Dimensions="',1,yszV(2),xszV(1),'">'
         endif
         write(ioxdmf,*)'    </Topology>'
@@ -506,13 +505,13 @@ contains
         write(ioxdmf,*)'        </DataItem>'
         write(ioxdmf,*)'        <!-- DxDyDz -->'
         write(ioxdmf,*)'        <DataItem Format="XML" Dimensions="3">'
-        if (output2D.eq.0) then
+        if (output2D == 0) then
           write(ioxdmf,*)'        ',nvisu*dz,nvisu*dy,nvisu*dx
-        else if (output2D.eq.1) then
+        else if (output2D == 1) then
           write(ioxdmf,*)'        ',dz,dy,1.
-        else if (output2D.eq.2) then
+        else if (output2D == 2) then
           write(ioxdmf,*)'        ',dz,1.,dx
-        else if (output2D.eq.3) then
+        else if (output2D == 3) then
           write(ioxdmf,*)'        ',1.,dy,dx
         endif
         write(ioxdmf,*)'        </DataItem>'
@@ -534,7 +533,7 @@ contains
 
     implicit none
 
-    if (nrank.eq.0) then
+    if (nrank == 0) then
       write(ioxdmf,'(/)')
       write(ioxdmf,*)'    </Grid>'
       write(ioxdmf,*)'</Domain>'
@@ -569,16 +568,16 @@ contains
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: local_array
 
     if (use_xdmf) then
-      if (nrank.eq.0) then
-        write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
+       if (nrank == 0) then
+          write(ioxdmf,*)'        <Attribute Name="'//filename//'" Center="Node">'
 #ifndef ADIOS2
-        write(ioxdmf,*)'           <DataItem Format="Binary"'
+          write(ioxdmf,*)'           <DataItem Format="Binary"'
 #else
-        write(ioxdmf,*)'           <DataItem Format="HDF"'
+          write(ioxdmf,*)'           <DataItem Format="HDF"'
 #endif
 #ifdef DOUBLE_PREC
 #ifdef SAVE_SINGLE
-          if (output2D.eq.0) then
+          if (output2D == 0) then
              write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
           else
              write(ioxdmf,*)'            DataType="Float" Precision="8" Endian="little" Seek="0"'
@@ -589,13 +588,13 @@ contains
 #else
           write(ioxdmf,*)'            DataType="Float" Precision="4" Endian="little" Seek="0"'
 #endif
-          if (output2D.eq.0) then
+          if (output2D == 0) then
              write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),xszV(1),'">'
-          else if (output2D.eq.1) then
+          else if (output2D == 1) then
              write(ioxdmf,*)'            Dimensions="',zszV(3),yszV(2),1,'">'
-          else if (output2D.eq.2) then
+          else if (output2D == 2) then
              write(ioxdmf,*)'            Dimensions="',zszV(3),1,xszV(1),'">'
-          else if (output2D.eq.3) then
+          else if (output2D == 3) then
              write(ioxdmf,*)'            Dimensions="',1,yszV(2),xszV(1),'">'
           endif
 #ifndef ADIOS2
@@ -614,11 +613,11 @@ contains
        local_array(:,:,:) = f1(:,:,:)
     endif
 
-    if (output2D.eq.0) then
+    if (output2D == 0) then
 #ifndef ADIOS2
-      uvisu = zero
-      call fine_to_coarseV(1,local_array,uvisu)
-      call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
+       uvisu = zero
+       call fine_to_coarseV(1,local_array,uvisu)
+       call decomp_2d_write_one(1,uvisu,"./data/"//pathname//'/'//filename//'-'//num//'.bin',2)
 #else
        if (iibm==2 .and. (.not.present(skip_ibm))) then
           print *, "Not Implemented: currently ADIOS2 IO doesn't support IBM-blanking"
