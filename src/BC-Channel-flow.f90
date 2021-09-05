@@ -162,6 +162,7 @@ contains
 
     implicit none
 
+    ! Arguments
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
@@ -266,9 +267,11 @@ contains
 
     implicit none
 
+    ! Arguments
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux
     real(mytype), intent(in) :: constant
 
+    ! Local variables
     integer :: code, i, j, k, jloc
     real(mytype) :: can, ub, coeff
 
@@ -386,6 +389,7 @@ contains
 
     implicit none
 
+    ! Arguments
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
