@@ -181,10 +181,10 @@ contains
 #ifdef OCC
 #ifdef MPI3
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(1:3), code)
-    if (code.ne.0 .or. any(mpi_stat(1:3)%MPI_ERROR.ne.0)) then
+    if (code /= 0 .or. any(mpi_stat(1:3)%MPI_ERROR /= 0)) then
 #else
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(:,1:3), code)
-    if (code.ne.0 .or. any(mpi_stat(MPI_ERROR,1:3).ne.0)) then
+    if (code /= 0 .or. any(mpi_stat(MPI_ERROR,1:3) /= 0)) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -244,10 +244,10 @@ contains
 #ifdef OCC
 #ifdef MPI3
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(1:3), code)
-    if (code.ne.0 .or. any(mpi_stat(1:3)%MPI_ERROR.ne.0)) then
+    if (code /= 0 .or. any(mpi_stat(1:3)%MPI_ERROR /= 0)) then
 #else
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(:,1:3), code)
-    if (code.ne.0 .or. any(mpi_stat(MPI_ERROR,1:3).ne.0)) then
+    if (code /= 0 .or. any(mpi_stat(MPI_ERROR,1:3) /= 0)) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -468,10 +468,10 @@ contains
 #ifdef OCC
 #ifdef MPI3
     call MPI_WAITALL(6, mpi_req(1:6), mpi_stat(1:6), code)
-    if (code.ne.0 .or. any(mpi_stat(1:6)%MPI_ERROR.ne.0)) then
+    if (code /= 0 .or. any(mpi_stat(1:6)%MPI_ERROR /= 0)) then
 #else
     call MPI_WAITALL(6, mpi_req(1:6), mpi_stat(:,1:6), code)
-    if (code.ne.0 .or. any(mpi_stat(MPI_ERROR,1:6).ne.0)) then
+    if (code /= 0 .or. any(mpi_stat(MPI_ERROR,1:6) /= 0)) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -894,10 +894,10 @@ contains
 #ifdef OCC
     call MPI_WAIT(mpi_req, mpi_stat, code)
 #ifdef MPI3
-    if (code.ne.0 .or. mpi_stat%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat%MPI_ERROR /= 0) then
       write(*,*) "Error in MPI_WAIT: ", code, mpi_stat%MPI_ERROR
 #else
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR) /= 0) then
       write(*,*) "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR)
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
@@ -971,10 +971,10 @@ contains
 #ifdef OCC
     call MPI_WAIT(mpi_req, mpi_stat, code)
 #ifdef MPI3
-    if (code.ne.0 .or. mpi_stat%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat%MPI_ERROR /= 0) then
       print *, "Error in MPI_WAIT: ", code, mpi_stat%MPI_ERROR
 #else
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR) /= 0) then
       print *, "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR)
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")

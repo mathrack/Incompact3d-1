@@ -314,10 +314,10 @@ contains
     ireq = 1
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -334,10 +334,10 @@ contains
     ireq = 2
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -352,10 +352,10 @@ contains
     ireq = 3
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -368,10 +368,10 @@ contains
     ireq = 2
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -388,10 +388,10 @@ contains
     ireq = 3
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -497,10 +497,10 @@ contains
     ireq = 1
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -524,10 +524,10 @@ contains
     ireq = 2
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -542,10 +542,10 @@ contains
     ireq = 1
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -562,10 +562,10 @@ contains
     ireq = 3
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif
@@ -578,10 +578,10 @@ contains
     ireq = 2
 #ifdef MPI3
     call MPI_WAIT(mpi_req(ireq), mpi_stat(ireq), code)
-    if (code.ne.0 .or. mpi_stat(ireq)%MPI_ERROR.ne.0) then
+    if (code /= 0 .or. mpi_stat(ireq)%MPI_ERROR /= 0) then
 #else
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
-    if (code.ne.0 .or. mpi_stat(MPI_ERROR,ireq).ne.0) then
+    if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
       call decomp_2d_abort(code,"MPI_WAIT")
     endif

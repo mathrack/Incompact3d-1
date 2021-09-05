@@ -39,11 +39,11 @@ subroutine transpose_y_to_x_real(src, dst, decomp)
       src,decomp%zcnts_xy(decomp%zranks_xy),decomp%zdispls_xy(decomp%zranks_xy),decomp%ztypes_xyr(decomp%zranks_xy), &
       dst,decomp%xcnts_xy(decomp%xranks_xy),decomp%xdispls_xy(decomp%xranks_xy),decomp%xtypes_xyr(decomp%xranks_xy), &
       decomp%ytoxNeighborComm,ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_NEIGHBOR_ALLTOALLW")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_NEIGHBOR_ALLTOALLW")
 #else
   call MPI_Alltoallw(src,decomp%zcnts_xy,decomp%zdispls_xy,decomp%ztypes_xyr, &
                      dst,decomp%xcnts_xy,decomp%xdispls_xy,decomp%xtypes_xyr,MPI_COMM_WORLD,ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALLW")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLW")
 #endif
 
 end subroutine transpose_y_to_x_real
@@ -76,11 +76,11 @@ subroutine transpose_y_to_x_complex(src, dst, decomp)
       src,decomp%zcnts_xy(decomp%zranks_xy),decomp%zdispls_xy(decomp%zranks_xy),decomp%ztypes_xyc(decomp%zranks_xy), &
       dst,decomp%xcnts_xy(decomp%xranks_xy),decomp%xdispls_xy(decomp%xranks_xy),decomp%xtypes_xyc(decomp%xranks_xy), &
       decomp%ytoxNeighborComm,ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_NEIGHBOR_ALLTOALLW")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_NEIGHBOR_ALLTOALLW")
 #else
   call MPI_Alltoallw(src,decomp%zcnts_xy,decomp%zdispls_xy,decomp%ztypes_xyc, &
                      dst,decomp%xcnts_xy,decomp%xdispls_xy,decomp%xtypes_xyc,MPI_COMM_WORLD,ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_ALLTOALLW")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLTOALLW")
 #endif
 
 end subroutine transpose_y_to_x_complex
@@ -129,11 +129,11 @@ subroutine transpose_y_to_x_real_start(src, dst, req, decomp)
       src,decomp%zcnts_xy(decomp%zranks_xy),decomp%zdispls_xy(decomp%zranks_xy),decomp%ztypes_xyr(decomp%zranks_xy), &
       dst,decomp%xcnts_xy(decomp%xranks_xy),decomp%xdispls_xy(decomp%xranks_xy),decomp%xtypes_xyr(decomp%xranks_xy), &
       decomp%ytoxNeighborComm,req,ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_INEIGHBOR_ALLTOALLW")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_INEIGHBOR_ALLTOALLW")
 #else
   call MPI_IAlltoallw(src,decomp%zcnts_xy,decomp%zdispls_xy,decomp%ztypes_xyr, &
                      dst,decomp%xcnts_xy,decomp%xdispls_xy,decomp%xtypes_xyr,MPI_COMM_WORLD,req,ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IALLTOALLW")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_IALLTOALLW")
 #endif
 
 end subroutine transpose_y_to_x_real_start
@@ -180,11 +180,11 @@ subroutine transpose_y_to_x_complex_start(src, dst, req, decomp)
       src,decomp%zcnts_xy(decomp%zranks_xy),decomp%zdispls_xy(decomp%zranks_xy),decomp%ztypes_xyc(decomp%zranks_xy), &
       dst,decomp%xcnts_xy(decomp%xranks_xy),decomp%xdispls_xy(decomp%xranks_xy),decomp%xtypes_xyc(decomp%xranks_xy), &
       decomp%ytoxNeighborComm,req,ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_NEIGHBOR_IALLTOALLW")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_NEIGHBOR_IALLTOALLW")
 #else
   call MPI_IAlltoallw(src,decomp%zcnts_xy,decomp%zdispls_xy,decomp%ztypes_xyc, &
                       dst,decomp%xcnts_xy,decomp%xdispls_xy,decomp%xtypes_xyc,MPI_COMM_WORLD,req,ierror)
-  if (ierror.ne.0) call decomp_2d_abort(ierror, "MPI_IALLTOALLW")
+  if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_IALLTOALLW")
 #endif
 
 end subroutine transpose_y_to_x_complex_start
