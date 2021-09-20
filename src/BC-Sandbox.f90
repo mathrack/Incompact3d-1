@@ -74,7 +74,7 @@ module sandbox
   implicit none
 
   character(len=120)  :: filename
-  integer, parameter :: filenum = 67
+  integer, save :: ionum, ionum1, ionum2, ionum3, ionum4
 
 #ifdef DOUBLE_PREC
 #if defined(__GFORTRAN__)
@@ -111,7 +111,11 @@ contains
     use variables, only : nx, nz
     use complex_geometry, only : nxraf,nyraf,nzraf
     use ibm
+#ifdef MPI3
+    use MPI_f08
+#else
     use MPI
+#endif
 
     implicit none
 
@@ -143,7 +147,11 @@ contains
     USE param
     USE variables
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -170,7 +178,11 @@ contains
     USE param
     USE variables
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
     USE var, only : phi2, phi3, ta2, di2
 
     implicit none
@@ -258,7 +270,11 @@ contains
     USE param
     USE variables
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -279,7 +295,9 @@ contains
     enddo
 
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     if (u1 == zero) then
       cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
@@ -333,7 +351,11 @@ contains
     USE param
     USE variables
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -348,6 +370,7 @@ contains
     int = sum(tmp)
 
     call MPI_ALLREDUCE(int,int1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     if (nrank==0) write(*,*) "Integration at frc : ",int1
 
@@ -368,7 +391,11 @@ contains
     USE param
     USE variables
     USE decomp_2d
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     implicit none
 
@@ -383,6 +410,7 @@ contains
     int = sum(tmp)
 
     call MPI_ALLREDUCE(int,int1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
 
     if (nrank==0) write(*,*) "Integration at frc SZA : ",int1
 
@@ -421,7 +449,11 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
+#ifdef MPI3
+    USE MPI_f08
+#else
     USE MPI
+#endif
 
     USE var, only : mu1
 
@@ -483,24 +515,24 @@ contains
       if (nrank == 0) write(*,*) 'reading : ', './data/bxz1.bin'
       if (nrank == 0) write(*,*) 'reading : ', './data/noise_mod_x1.bin'
       !
-      OPEN(filenum+1,FILE='./data/bxx1.bin',FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
-      OPEN(filenum+2,FILE='./data/bxy1.bin',FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
-      OPEN(filenum+3,FILE='./data/bxz1.bin',FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
-      OPEN(filenum+4,FILE='./data/noise_mod_x1.bin',FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
+      OPEN(newunit=ionum1,FILE='./data/bxx1.bin',FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
+      OPEN(newunit=ionum2,FILE='./data/bxy1.bin',FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
+      OPEN(newunit=ionum3,FILE='./data/bxz1.bin',FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
+      OPEN(newunit=ionum4,FILE='./data/noise_mod_x1.bin',FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
       !
       do k=1,xsize(3)
         do j=1,xsize(2)
           pos = (k - 1 + xstart(3) - 1) * ny + j + xstart(2) - 1
-          read(filenum+1,rec=pos) bxx1_sb(j,k)
-          read(filenum+2,rec=pos) bxy1_sb(j,k)
-          read(filenum+3,rec=pos) bxz1_sb(j,k)
-          read(filenum+4,rec=pos) noise_mod_x1(j,k)
+          read(ionum1,rec=pos) bxx1_sb(j,k)
+          read(ionum2,rec=pos) bxy1_sb(j,k)
+          read(ionum3,rec=pos) bxz1_sb(j,k)
+          read(ionum4,rec=pos) noise_mod_x1(j,k)
         enddo
       enddo
-      close(filenum+1)
-      close(filenum+2)
-      close(filenum+3)
-      close(filenum+4)
+      close(ionum1)
+      close(ionum2)
+      close(ionum3)
+      close(ionum4)
     endif
 
     !Read phi inflow profile
@@ -511,15 +543,15 @@ contains
         !
         filename = './data/bxphi1'//char(is+48)//'.bin'
         if (nrank == 0) write(*,*) 'reading : ', filename
-        OPEN(filenum,FILE=filename,FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
+        OPEN(newunit=ionum,FILE=filename,FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
         !
         do k=1,xsize(3)
           do j=1,xsize(2)
             pos = (k - 1 + xstart(3) - 1) * ny + j + xstart(2) - 1
-            read(filenum,rec=pos) bxphi1(j,k,is)
+            read(ionum,rec=pos) bxphi1(j,k,is)
           enddo
         enddo
-        close(filenum)
+        close(ionum)
         !
       enddo
     endif
@@ -533,15 +565,15 @@ contains
         !
         filename = './data/byphi1'//char(is+48)//'.bin'
         if (nrank == 0) write(*,*) 'reading : ', filename
-        OPEN(filenum,FILE=filename,FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
+        OPEN(newunit=ionum,FILE=filename,FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
         !
         do k=1,xsize(3)
           do i=1,xsize(1)
             pos = (k - 1 + xstart(3) - 1) * nx + i + xstart(1) - 1
-            read(filenum,rec=pos) byphi1(i,k,is)
+            read(ionum,rec=pos) byphi1(i,k,is)
           enddo
         enddo
-        close(filenum)
+        close(ionum)
         !
       enddo
     endif
@@ -555,15 +587,15 @@ contains
         !
         filename = './data/byphin'//char(is+48)//'.bin'
         if (nrank == 0) write(*,*) 'reading : ', filename
-        OPEN(filenum,FILE=filename,FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
+        OPEN(newunit=ionum,FILE=filename,FORM='UNFORMATTED',ACCESS='DIRECT', RECL=filerecl, STATUS='OLD')
         !
         do k=1,xsize(3)
           do i=1,xsize(1)
             pos = (k - 1 + xstart(3) - 1) * nx + i + xstart(1) - 1
-            read(filenum,rec=pos) byphin(i,k,is)
+            read(ionum,rec=pos) byphin(i,k,is)
           enddo
         enddo
-        close(filenum)
+        close(ionum)
         !
       enddo
     endif
@@ -593,8 +625,8 @@ contains
     !   WRITE(num, ifilenameformat) itime/iprocessing
     ! endif
     !
-    ! call write_xdmf_header(filenum+1, num, './data/xdmf/xy_planes', nx, ny, 1)
-    ! call write_xdmf_header(filenum+2, num, './data/xdmf/xz_planes', nx, 1, nz)
+    ! call write_xdmf_header(ionum1, num, './data/xdmf/xy_planes', nx, ny, 1)
+    ! call write_xdmf_header(ionum2, num, './data/xdmf/xz_planes', nx, 1, nz)
     !
     !
     ! call postprocessing_aux(ux1,ux2,ux3,'ux',num)
@@ -607,8 +639,8 @@ contains
     !   enddo
     ! endif
     !
-    ! call write_xdmf_footer(filenum+1)
-    ! call write_xdmf_footer(filenum+2)
+    ! call write_xdmf_footer(ionum1)
+    ! call write_xdmf_footer(ionum2)
 
     return
   end subroutine postprocess_sandbox
@@ -645,13 +677,13 @@ contains
   !   call decomp_2d_write_plane(2,tmp2,2,1,filename)
   !   !
   !   if (nrank == 0 .and. ixdmf) then
-  !     write(filenum+2,*)'        <Attribute Name="'//trim(name)//'" Center="Node">'
-  !     write(filenum+2,*)'           <DataItem Format="Binary"'
-  !     write(filenum+2,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
-  !     write(filenum+2,*)'            Dimensions="',nz,1,nx,'">'
-  !     write(filenum+2,*)'              ../xz_planes/'//trim(name)//'-'//trim(num)//'.bin'
-  !     write(filenum+2,*)'           </DataItem>'
-  !     write(filenum+2,*)'        </Attribute>'
+  !     write(ionum2,*)'        <Attribute Name="'//trim(name)//'" Center="Node">'
+  !     write(ionum2,*)'           <DataItem Format="Binary"'
+  !     write(ionum2,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
+  !     write(ionum2,*)'            Dimensions="',nz,1,nx,'">'
+  !     write(ionum2,*)'              ../xz_planes/'//trim(name)//'-'//trim(num)//'.bin'
+  !     write(ionum2,*)'           </DataItem>'
+  !     write(ionum2,*)'        </Attribute>'
   !   endif
   !   !spanwise averaged
   !   call mean_plane_z(u3,zsize(1),zsize(2),zsize(3),tmp3(:,:,1))
@@ -659,52 +691,52 @@ contains
   !   call decomp_2d_write_plane(3,tmp3,3,1,filename)
   !   !
   !   if (nrank == 0 .and. ixdmf) then
-  !     write(filenum+1,*)'        <Attribute Name="'//trim(name)//'" Center="Node">'
-  !     write(filenum+1,*)'           <DataItem Format="Binary"'
-  !     write(filenum+1,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
-  !     write(filenum+1,*)'            Dimensions="',1,ny,nx,'">'
-  !     write(filenum+1,*)'              ../xy_planes/'//trim(name)//'-'//trim(num)//'.bin'
-  !     write(filenum+1,*)'           </DataItem>'
-  !     write(filenum+1,*)'        </Attribute>'
+  !     write(ionum1,*)'        <Attribute Name="'//trim(name)//'" Center="Node">'
+  !     write(ionum1,*)'           <DataItem Format="Binary"'
+  !     write(ionum1,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
+  !     write(ionum1,*)'            Dimensions="',1,ny,nx,'">'
+  !     write(ionum1,*)'              ../xy_planes/'//trim(name)//'-'//trim(num)//'.bin'
+  !     write(ionum1,*)'           </DataItem>'
+  !     write(ionum1,*)'        </Attribute>'
   !   endif
   !   !center plane
   !   filename = './data/xy_planes/'//trim(name)//'c-'//trim(num)//'.bin'
   !   call decomp_2d_write_plane(3,u3,3,nz/2,filename)
   !   !
   !   if (nrank == 0 .and. ixdmf) then
-  !     write(filenum+1,*)'        <Attribute Name="'//trim(name)//'c'//'" Center="Node">'
-  !     write(filenum+1,*)'           <DataItem Format="Binary"'
-  !     write(filenum+1,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
-  !     write(filenum+1,*)'            Dimensions="',1,ny,nx,'">'
-  !     write(filenum+1,*)'              ../xy_planes/'//trim(name)//'c-'//trim(num)//'.bin'
-  !     write(filenum+1,*)'           </DataItem>'
-  !     write(filenum+1,*)'        </Attribute>'
+  !     write(ionum1,*)'        <Attribute Name="'//trim(name)//'c'//'" Center="Node">'
+  !     write(ionum1,*)'           <DataItem Format="Binary"'
+  !     write(ionum1,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
+  !     write(ionum1,*)'            Dimensions="',1,ny,nx,'">'
+  !     write(ionum1,*)'              ../xy_planes/'//trim(name)//'c-'//trim(num)//'.bin'
+  !     write(ionum1,*)'           </DataItem>'
+  !     write(ionum1,*)'        </Attribute>'
   !   endif
   !   !bot plane
   !   filename = './data/xz_planes/'//trim(name)//'b-'//trim(num)//'.bin'
   !   call decomp_2d_write_plane(2,u2,2,1,filename)
   !   !
   !   if (nrank == 0 .and. ixdmf) then
-  !     write(filenum+2,*)'        <Attribute Name="'//trim(name)//'b'//'" Center="Node">'
-  !     write(filenum+2,*)'           <DataItem Format="Binary"'
-  !     write(filenum+2,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
-  !     write(filenum+2,*)'            Dimensions="',nz,1,nx,'">'
-  !     write(filenum+2,*)'              ../xz_planes/'//trim(name)//'b-'//trim(num)//'.bin'
-  !     write(filenum+2,*)'           </DataItem>'
-  !     write(filenum+2,*)'        </Attribute>'
+  !     write(ionum2,*)'        <Attribute Name="'//trim(name)//'b'//'" Center="Node">'
+  !     write(ionum2,*)'           <DataItem Format="Binary"'
+  !     write(ionum2,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
+  !     write(ionum2,*)'            Dimensions="',nz,1,nx,'">'
+  !     write(ionum2,*)'              ../xz_planes/'//trim(name)//'b-'//trim(num)//'.bin'
+  !     write(ionum2,*)'           </DataItem>'
+  !     write(ionum2,*)'        </Attribute>'
   !   endif
   !   !top plane
   !   filename = './data/xz_planes/'//trim(name)//'t-'//trim(num)//'.bin'
   !   call decomp_2d_write_plane(2,u2,2,ny,filename)
   !   !
   !   if (nrank == 0 .and. ixdmf) then
-  !     write(filenum+2,*)'        <Attribute Name="'//trim(name)//'t'//'" Center="Node">'
-  !     write(filenum+2,*)'           <DataItem Format="Binary"'
-  !     write(filenum+2,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
-  !     write(filenum+2,*)'            Dimensions="',nz,1,nx,'">'
-  !     write(filenum+2,*)'              ../xz_planes/'//trim(name)//'t-'//trim(num)//'.bin'
-  !     write(filenum+2,*)'           </DataItem>'
-  !     write(filenum+2,*)'        </Attribute>'
+  !     write(ionum2,*)'        <Attribute Name="'//trim(name)//'t'//'" Center="Node">'
+  !     write(ionum2,*)'           <DataItem Format="Binary"'
+  !     write(ionum2,*)'            DataType="Float" Precision="'//CHAR(48+prec)//'" Endian="little" Seek="0"'
+  !     write(ionum2,*)'            Dimensions="',nz,1,nx,'">'
+  !     write(ionum2,*)'              ../xz_planes/'//trim(name)//'t-'//trim(num)//'.bin'
+  !     write(ionum2,*)'           </DataItem>'
+  !     write(ionum2,*)'        </Attribute>'
   !   endif
   !
   ! end subroutine postprocessing_aux
