@@ -231,7 +231,7 @@ subroutine finalize_forces
 end subroutine finalize_forces
 
 !***********************************************************************
-subroutine force(ux1,uy1,ep1)
+subroutine force(ux1,uy1,ep1,iounit)
 
   !***********************************************************************
 
@@ -256,6 +256,7 @@ subroutine force(ux1,uy1,ep1)
 
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ux1, uy1
   real(mytype), dimension(xsize(1),xsize(2),xsize(3)),intent(in) :: ep1
+  integer, intent(in) :: iounit
 
   real(mytype), dimension(ysize(1),ysize(2),ysize(3)) :: ppi2
 
@@ -574,8 +575,8 @@ subroutine force(ux1,uy1,ep1)
 !        endif
 !     endif
      if (nrank  ==  0) then
-        write(38,*) t,xDrag_mean,yLift_mean
-        call flush(38)
+        write(iounit,*) t,xDrag_mean,yLift_mean
+        call flush(iounit)
      endif
      if (mod(itime, icheckpoint) == 0) then
         if (nrank  ==  0) then

@@ -249,6 +249,7 @@ subroutine init_xcompact3d()
   ! compute diffusion number of simulation
   call compute_cfldiff()
   !####################################################################
+  call boot(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1,pp3,px1,py1,pz1)
   if (irestart==0) then
      call init(rho1,ux1,uy1,uz1,ep1,phi1,drho1,dux1,duy1,duz1,dphi1,pp3,px1,py1,pz1)
      itime = 0
@@ -275,17 +276,6 @@ subroutine init_xcompact3d()
 
   if (iturbine /= 0) call init_turbines(ux1, uy1, uz1)
 
-  if (itype==2) then
-     if(nrank == 0)then
-        open(42,file='time_evol.dat',form='formatted')
-     endif
-  endif
-  if (itype==5) then
-     if(nrank == 0)then
-        open(38,file='forces.dat',form='formatted')
-     endif
-  endif
-
 endsubroutine init_xcompact3d
 !########################################################################
 !########################################################################
@@ -310,18 +300,7 @@ subroutine finalise_xcompact3d()
   implicit none
 
   integer :: code
-  
-  if (itype==2) then
-     if(nrank == 0)then
-        close(42)
-     endif
-  endif
-  if (itype==5) then
-     if(nrank == 0)then
-        close(38)
-     endif
-  endif
-  
+
   call simu_stats(4)
   if (iforces == 1) call finalize_forces()
   if (iimplicit /= 0) call finalize_implicit()
