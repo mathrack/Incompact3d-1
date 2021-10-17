@@ -1259,6 +1259,19 @@ contains
     integer :: index_src, index_dest
 #endif
 
+    !LG : AJOUTS "bidons" pour eviter un plantage en -O3 avec gcc9.3
+    !       * la fonction sortait des valeurs 'aleatoires'
+    !         et le calcul plantait dans MPI_ALLTOALLV
+    !       * pas de plantage en O2
+    
+    character(len=100) :: tmp_char
+    if (nrank==0) then
+       open(newunit=i,file='temp.dat', form='unformatted')
+       write(i) decomp%x1dist,decomp%y1dist,decomp%y2dist,decomp%z2dist, &
+                decomp%xsz,decomp%ysz,decomp%zsz
+       close(i, status='delete')
+    endif
+
     ! MPI_ALLTOALLV buffer information
 
     do i=0, dims(1)-1
