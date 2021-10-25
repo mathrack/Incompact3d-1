@@ -5,7 +5,7 @@ include $(LATEST_PFUNIT_DIR)/include/PFUNIT.mk
 
 all: test_x_00 test_y_00 test_y_00_str test_z_00
 
-X3D := ../../src/x3d_tools.o ../../src/les_models.o ../../src/signal.o ../../src/genepsi3d.o ../../src/statistics.o ../../src/dynstall*.o ../../src/a*.o ../../src/turbine.o ../../src/poisson.o ../../src/implicit.o ../../src/ibm.o ../../src/schemes.o ../../src/filters.o ../../src/navier.o ../../src/derive.o ../../src/tools.o ../../src/visu.o ../../src/BC*.o ../../src/case.o ../../src/variables.o ../../src/probes.o ../../src/forces.o ../../src/module_param.o ../../src/parameters.o ../../decomp2d/*.o
+X3D := ../../src/x3d_tools.o ../../src/les_models.o ../../src/signal.o ../../src/genepsi3d.o ../../src/statistics.o ../../src/dynstall*.o ../../src/a*.o ../../src/turbine.o ../../src/poisson.o ../../src/implicit.o ../../src/ibm.o ../../src/schemes.o ../../src/filters.o ../../src/navier.o ../../src/derive.o ../../src/tools.o ../../src/visu.o ../../src/BC*.o ../../src/case.o ../../src/variables.o ../../src/probes.o ../../src/forces.o ../../src/module_param.o ../../src/parameters.o ../../src/thomas.o ../../decomp2d/*.o
 
 %.o : %.F90
 	$(FC) $(FFLAGS) $(OPT) $(DEFS) $(DEFS2) $(INC) $(PFUNIT_EXTRA_FFLAGS) -c $<
@@ -29,7 +29,7 @@ test_z_00_OTHER_LIBRARIES := $(X3D) -L../lib -lx3d
 $(eval $(call make_pfunit_test,test_z_00))
 
 clean:
-	$(RM) *.o *.mod *.a  *.inc
+	$(RM) *.o *.mod *.a  *.inc *.dat *.png
 	$(RM) final.F90
 	$(RM) test_x_00 initx00.F90 testx00.F90
 	$(RM) test_y_00 inity00.F90 testy00.F90
