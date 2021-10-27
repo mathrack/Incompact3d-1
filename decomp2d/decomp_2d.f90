@@ -1482,10 +1482,12 @@ contains
       index_src,zranks(1:index_src),zweights(1:index_src), &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       MPI_INFO_NULL,.true.,decomp%xtozNeighborComm,ierror)
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
     call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       index_src,zranks(1:index_src),zweights(1:index_src), &
       MPI_INFO_NULL,.true.,decomp%ztoxNeighborComm,ierror)
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
 #endif
 
     ! Init local variables (x <=> y transpose)
@@ -1614,10 +1616,12 @@ contains
       index_src,zranks(1:index_src),zweights(1:index_src), &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       MPI_INFO_NULL,.true.,decomp%xtoyNeighborComm,ierror)
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
     call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       index_src,zranks(1:index_src),zweights(1:index_src), &
       MPI_INFO_NULL,.true.,decomp%ytoxNeighborComm,ierror)
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
 #endif
 
     ! Init local variables (y <=> z transpose)
@@ -1746,10 +1750,12 @@ contains
       index_src,zranks(1:index_src),zweights(1:index_src), &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       MPI_INFO_NULL,.true.,decomp%ytozNeighborComm,ierror)
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
     call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       index_src,zranks(1:index_src),zweights(1:index_src), &
       MPI_INFO_NULL,.true.,decomp%ztoyNeighborComm,ierror)
+    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
 #endif
 
     return
