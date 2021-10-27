@@ -1,4 +1,4 @@
-module initz11
+module inity21_str
 
    use MPI
    use pFunit
@@ -22,10 +22,10 @@ contains
       if (code /= 0) call decomp_2d_abort(code, "mpi_comm_rank")
       call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,code)
       if (code /= 0) call decomp_2d_abort(code, "mpi_comm_size")
-      call init_xcompact3d("./z11.i3d"//c_null_char)
+      call init_xcompact3d("./y21_str.i3d"//c_null_char)
 
       check_error = .true.
 
 end subroutine try_init
 
-end module initz11
+end module inity21_str
