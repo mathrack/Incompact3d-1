@@ -19,6 +19,7 @@ module decomp_2d
 #else
   use MPI
 #endif
+  use, intrinsic :: iso_fortran_env, only : real32, real64
 
   implicit none
 
@@ -47,23 +48,23 @@ module decomp_2d
 #endif
 #else
 #ifdef DOUBLE_PREC
-  integer, parameter, public :: mytype = KIND(0.0D0)
+  integer, parameter, public :: mytype = KIND(0._real64)
   integer, parameter, public :: real_type = MPI_DOUBLE_PRECISION
   integer, parameter, public :: real2_type = MPI_2DOUBLE_PRECISION
   integer, parameter, public :: complex_type = MPI_DOUBLE_COMPLEX
 #ifdef SAVE_SINGLE
-  integer, parameter, public :: mytype_single = KIND(0.0)
+  integer, parameter, public :: mytype_single = KIND(0._real32)
   integer, parameter, public :: real_type_single = MPI_REAL
 #else
-  integer, parameter, public :: mytype_single = KIND(0.0D0)
+  integer, parameter, public :: mytype_single = KIND(0._real_64)
   integer, parameter, public :: real_type_single = MPI_DOUBLE_PRECISION
 #endif
 #else
-  integer, parameter, public :: mytype = KIND(0.0)
+  integer, parameter, public :: mytype = KIND(0._real32)
   integer, parameter, public :: real_type = MPI_REAL
   integer, parameter, public :: real2_type = MPI_2REAL
   integer, parameter, public :: complex_type = MPI_COMPLEX
-  integer, parameter, public :: mytype_single = KIND(0.0)
+  integer, parameter, public :: mytype_single = KIND(0._real32)
   integer, parameter, public :: real_type_single = MPI_REAL
 #endif
 #endif
