@@ -1129,7 +1129,8 @@ contains
           !! Single
           data_type = adios2_type_real
        else
-          call decomp_2d_abort(__FILE__, __LINE__, -1,"Unknown data type")
+          call decomp_2d_abort(__FILE__, __LINE__, -1, &
+                  "Trying to write unknown data type!")
        endif
 
        call adios2_define_variable(var_handle, io, varname, data_type, &

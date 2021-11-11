@@ -93,9 +93,8 @@ contains
       if (nrank == 0) print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
 
       if (phimin1 < uvwt_lbound(4) .or. phimax1 >= uvwt_ubound(4)) then
-         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+         call decomp_2d_abort(__FILE__, __LINE__, -1, &
                  'Scalar diverged! SIMULATION IS STOPPED!')
-         stop
       endif
 
     enddo
@@ -159,7 +158,7 @@ contains
     if (uxmin1 < uvwt_lbound(1) .or. uxmax1 >= uvwt_ubound(1) .or. &
         uymin1 < uvwt_lbound(2) .or. uymax1 >= uvwt_ubound(2) .or. &
         uzmin1 < uvwt_lbound(3) .or. uzmax1 >= uvwt_ubound(3) ) then
-      call decomp_2d_abort(__FILE__, __LINE__, 0, &
+      call decomp_2d_abort(__FILE__, __LINE__, -1, &
               'Velocity diverged! SIMULATION IS STOPPED!')
       stop
     endif
@@ -297,13 +296,12 @@ contains
            print *, "Error: Impossible to open "//trim(filename)
            print *,'==========================================================='
          endif
-         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
+         call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
        endif
 
        filesize = 0_MPI_OFFSET_KIND
        call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
-       if (code /= 0) &
-         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_SET_SIZE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_SET_SIZE")
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_write_var(fh,disp,1,ux1)
        call decomp_2d_write_var(fh,disp,1,uy1)
@@ -352,7 +350,7 @@ contains
            print *, "Error: Impossible to close "//trim(filename)
            print *,'==========================================================='
          endif
-         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
+         call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
        endif
        ! Write info file for restart - Kay Schäfer
        if (nrank == 0) then
@@ -402,7 +400,7 @@ contains
            print *, "Error: Impossible to open "//trim(filestart)
            print *,'==========================================================='
          endif
-         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
+         call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
        endif
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_read_var(fh,disp,1,ux1)
@@ -452,7 +450,7 @@ contains
            print *, "Error: Impossible to close "//trim(filestart)
            print *,'==========================================================='
          endif
-         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
+         call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
        endif
 
        !! Read time of restart file
@@ -631,7 +629,7 @@ contains
         print *,'Error: Impossible to open '//trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
         print *,'==========================================================='
       endif
-      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
+      call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
     endif
     disp = 0_MPI_OFFSET_KIND
     call decomp_2d_read_inflow(fh,disp,ntimesteps,ux_inflow)
@@ -644,7 +642,7 @@ contains
         print *,'Error: Impossible to close '//trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
         print *,'==========================================================='
       endif
-      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
+      call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
     endif
 
   end subroutine read_inflow
@@ -713,7 +711,7 @@ contains
         print *,'Error: Impossible to open '//'./out/inflow'//trim(adjustl(fnoutflow))
         print *,'==========================================================='
       endif
-      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
+      call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
     endif
     filesize = 0_MPI_OFFSET_KIND
     call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
@@ -729,7 +727,7 @@ contains
         print *,'Error: Impossible to close '//'./out/inflow'//trim(adjustl(fnoutflow))
         print *,'==========================================================='
       endif
-      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
+      call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
     endif
     
   end subroutine write_outflow

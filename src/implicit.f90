@@ -298,17 +298,11 @@ contains
 !*******************************************************************
     use decomp_2d, only : mytype, decomp_2d_abort
     use param
-#ifdef MPI3
-    USE MPI_f08
-#else
-    USE MPI
-#endif
 
     implicit none
 
     integer :: i,j,k
     integer, intent(in) :: ny
-    integer :: code,ierror
     real(mytype),dimension(ny), intent(in)  :: aam,bbm,ccm,ddm,eem,rrm,qqm
     real(mytype),dimension(ny), intent(out) :: ggm,hhm,ssm
     real(mytype),dimension(ny), intent(out) :: vvm,wwm,zzm
@@ -538,17 +532,11 @@ contains
     !
     !********************************************************************
     use decomp_2d, only : mytype, decomp_2d_abort
-#ifdef MPI3
-    USE MPI_f08
-#else
-    USE MPI
-#endif
     
     implicit none
 
     integer :: i,j,k,kk
     integer, intent(in) :: nx,ny,nz
-    integer :: code,ierror
     real(mytype),dimension(nx,ny,nz), intent(out) :: xsol
     real(mytype),dimension(nx,ny,nz), intent(in) :: bbb
     real(mytype),dimension(ny), intent(in)    :: ggm,hhm,ssm,rrm
@@ -660,7 +648,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   else
      !>>> We should not be here
      call decomp_2d_abort(__FILE__, __LINE__, itimescheme, &
-             "Unrecognised implicit itimescheme: ")
+             "Unrecognised implicit itimescheme")
 
   endif
 
@@ -784,7 +772,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
            if (isc == 0) print *, "   Wrong combination for ncly1, nclyn and npaire", ncly1, nclyn, npaire
            if (isc /= 0) print *, "   Wrong combination for nclyS1, nclySn and npaire", nclyS1, nclySn, npaire
         endif
-        call decomp_2d_abort(__FILE__, __LINE__, -1,"Something is wrong")
+        call decomp_2d_abort(__FILE__, __LINE__, -1, "Something is wrong")
      endif
      tb2=0.;
      if ((isc == 0.and.ncly1 == 0.and.nclyn == 0).or.(isc > 0.and.nclyS1 == 0.and.nclySn == 0)) then

@@ -129,7 +129,7 @@ contains
     if (output2D < 0 .or. output2D > 3 &
                      .or. (output2d == 2.and.istret /= 0)) &
       call decomp_2d_abort(__FILE__, __LINE__, output2D, &
-              "Visu module: incorrect value for output2D")
+                           "Visu module: incorrect value for output2D")
 
 #ifdef ADIOS2
     !! TODO: make this a runtime-option
@@ -147,7 +147,7 @@ contains
     else if (io_write_real_coarse % engine_type == "HDF5") then
        write(outfile, *) "data.hdf5"
     else
-       call decomp_2d_abort(__FILE__, __LINE__, code,"Unknown engine!")
+       call decomp_2d_abort(__FILE__, __LINE__, -1, "Unknown engine!")
     endif
 
     !! Register variables

@@ -173,7 +173,7 @@ contains
              print *,'Error: MPI_FILE_OPEN : '//trim(filename)
              print *,'==========================================================='
           endif
-          call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
+          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
        endif
        filesize = 0_MPI_OFFSET_KIND
        call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
@@ -190,7 +190,7 @@ contains
              print *,'Error: MPI_FILE_CLOSE : '//trim(filename)
              print *,'==========================================================='
           endif
-          call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
+          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
        endif
     else !read
        call MPI_FILE_OPEN(MPI_COMM_WORLD, filestart, &
@@ -202,7 +202,7 @@ contains
              print *,'Error: MPI_FILE_OPEN : '//trim(filestart)
              print *,'==========================================================='
           endif
-          call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
+          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_OPEN")
        endif
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_read_var(fh,disp,1,ux01)
@@ -216,7 +216,7 @@ contains
              print *,'Error: MPI_FILE_CLOSE : '//trim(filestart)
              print *,'==========================================================='
           endif
-          call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
+          call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_CLOSE")
        endif
     endif
 

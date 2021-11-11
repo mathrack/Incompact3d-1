@@ -81,7 +81,7 @@ contains
        else if (present(npaire)) then
           call inttimp(var1, dvar1, npaire=npaire, isc=is)
        else
-          call decomp_2d_abort(__FILE__, __LINE__, -1,"Error in intt call")
+          call decomp_2d_abort(__FILE__, __LINE__, -1, "Error in intt call")
        endif
 
     elseif (itimescheme == 1) then

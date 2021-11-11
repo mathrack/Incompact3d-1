@@ -269,7 +269,7 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
   !
   !*******************************************************************
 
-  use decomp_2d, only : mytype, decomp_2d_abort
+  use decomp_2d, only : mytype, nrank, decomp_2d_abort
   use param
 
   implicit none
@@ -290,9 +290,11 @@ subroutine first_derivative(alfa1,af1,bf1,cf1,df1,alfa2,af2,alfan,afn,bfn,&
      afi  = one/(two*d)
      bfi  = zero
   elseif(ifirstder==2) then ! Fourth-order central
-     call decomp_2d_abort(__FILE__, __LINE__, -1,'Set of coefficients not ready yet')
+     call decomp_2d_abort(__FILE__, __LINE__, -1, &
+             'Set of coefficients not ready yet')
   elseif(ifirstder==3) then ! Fourth-order compact
-     call decomp_2d_abort(__FILE__, __LINE__, -1,'Set of coefficients not ready yet')
+     call decomp_2d_abort(__FILE__, __LINE__, -1, &
+             'Set of coefficients not ready yet')
   elseif(ifirstder==4) then ! Sixth-order compact
      alfai= one/three
      afi  = (seven/nine)/d
@@ -462,9 +464,11 @@ subroutine second_derivative(alsa1,as1,bs1,&
      bstt = bsi
      cstt = csi
   elseif(isecondder==2) then ! Fourth-order central
-     call decomp_2d_abort(__FILE__, __LINE__, -1,'Set of coefficients not ready yet')
+     call decomp_2d_abort(__FILE__, __LINE__, -1, &
+             'Set of coefficients not ready yet')
   elseif(isecondder==3) then ! Fourth-order compact
-     call decomp_2d_abort(__FILE__, __LINE__, -1,'Set of coefficients not ready yet')
+     call decomp_2d_abort(__FILE__, __LINE__, -1, &
+             'Set of coefficients not ready yet')
   elseif(isecondder==4) then ! Sixth-order compact Lele style (no extra dissipation)
      alsai= two/eleven
      asi  = (twelve/eleven)/d2

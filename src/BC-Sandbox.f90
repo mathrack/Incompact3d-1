@@ -111,11 +111,6 @@ contains
     use variables, only : nx, nz
     use complex_geometry, only : nxraf,nyraf,nzraf
     use ibm
-#ifdef MPI3
-    use MPI_f08
-#else
-    use MPI
-#endif
 
     implicit none
 
@@ -124,7 +119,6 @@ contains
     real(mytype),dimension(ny) :: yp
     real(mytype)               :: dx,dz
     real(mytype)               :: remp
-    integer                    :: code, ierror
     !
     if (nxi == 1.and.nxf == nx.and.&
         nyi == xstart(2).and.nyf == xend(2).and.&
