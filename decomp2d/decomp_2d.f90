@@ -27,23 +27,23 @@ module decomp_2d
 
 #ifdef MPI3
 #ifdef DOUBLE_PREC
-  integer, parameter, public :: mytype = KIND(0.0D0)
+  integer, parameter, public :: mytype = KIND(0._real64)
   type(mpi_datatype), parameter, public :: real_type = MPI_DOUBLE_PRECISION
   type(mpi_datatype), parameter, public :: real2_type = MPI_2DOUBLE_PRECISION
   type(mpi_datatype), parameter, public :: complex_type = MPI_DOUBLE_COMPLEX
 #ifdef SAVE_SINGLE
-  integer, parameter, public :: mytype_single = KIND(0.0)
+  integer, parameter, public :: mytype_single = KIND(0._real32)
   type(mpi_datatype), parameter, public :: real_type_single = MPI_REAL
 #else
-  integer, parameter, public :: mytype_single = KIND(0.0D0)
+  integer, parameter, public :: mytype_single = KIND(0._real64)
   type(mpi_datatype), parameter, public :: real_type_single = MPI_DOUBLE_PRECISION
 #endif
 #else
-  integer, parameter, public :: mytype = KIND(0.0)
+  integer, parameter, public :: mytype = KIND(0._real32)
   type(mpi_datatype), parameter, public :: real_type = MPI_REAL
   type(mpi_datatype), parameter, public :: real2_type = MPI_2REAL
   type(mpi_datatype), parameter, public :: complex_type = MPI_COMPLEX
-  integer, parameter, public :: mytype_single = KIND(0.0)
+  integer, parameter, public :: mytype_single = KIND(0._real32)
   type(mpi_datatype), parameter, public :: real_type_single = MPI_REAL
 #endif
 #else
@@ -333,6 +333,11 @@ module decomp_2d
      module procedure alloc_z_complex
   end interface alloc_z
 
+  interface decomp_2d_abort
+     module procedure decomp_2d_abort_basic
+     module procedure decomp_2d_abort_file_line
+  end interface decomp_2d_abort
+
 contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -373,7 +378,7 @@ contains
     else
        if (nproc /= p_row*p_col) then
           errorcode = 1
-          call decomp_2d_abort(errorcode, &
+          call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
                'Invalid 2D processor grid - nproc /= p_row*p_col')
        else
           row = p_row
@@ -394,28 +399,28 @@ contains
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., &  ! do not reorder rank
          DECOMP_2D_COMM_CART_X, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_z
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Y, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
     periodic(1) = periodic_x
     periodic(2) = periodic_y
     call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
          .false., DECOMP_2D_COMM_CART_Z, ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
 
     call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_COORDS")
 
     ! derive communicators defining sub-groups for ALLTOALL(V)
     call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
          DECOMP_2D_COMM_COL,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
     call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
          DECOMP_2D_COMM_ROW,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
 
     ! gather information for halo-cell support code
     call init_neighbour
@@ -440,7 +445,7 @@ contains
     ! do not use 'mytype' which is compiler dependent
     ! also possible to use inquire(iolength=...) 
     call MPI_TYPE_SIZE(real_type,mytype_bytes,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_SIZE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_SIZE")
 
     return
   end subroutine decomp_2d_init
@@ -495,7 +500,7 @@ contains
     ! verify the global size can actually be distributed as pencils
     if (nx<dims(1) .or. ny<dims(1) .or. ny<dims(2) .or. nz<dims(2)) then
        errorcode = 6
-       call decomp_2d_abort(errorcode, &
+       call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
             'Invalid 2D processor grid. ' // &
             'Make sure that min(nx,ny) >= p_row and ' // &
             'min(ny,nz) >= p_col')
@@ -584,53 +589,53 @@ contains
       ! XZ
       if (decomp%xtypes_xzr(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%xtypes_xzr(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       if (decomp%ztypes_xzr(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%ztypes_xzr(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       if (decomp%xtypes_xzc(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%xtypes_xzc(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       if (decomp%ztypes_xzc(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%ztypes_xzc(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       ! XY
       if (decomp%xtypes_xyr(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%xtypes_xyr(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       if (decomp%ztypes_xyr(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%ztypes_xyr(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       if (decomp%xtypes_xyc(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%xtypes_xyc(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       if (decomp%ztypes_xyc(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%ztypes_xyc(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       ! YZ
       if (decomp%xtypes_yzr(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%xtypes_yzr(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       if (decomp%ztypes_yzr(i) /= MPI_INTEGER) then                       
         call MPI_Type_free(decomp%ztypes_yzr(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       if (decomp%xtypes_yzc(i) /= MPI_INTEGER) then
         call MPI_Type_free(decomp%xtypes_yzc(i),ierror)                      
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
       if (decomp%ztypes_yzc(i) /= MPI_INTEGER) then                        
         call MPI_Type_free(decomp%ztypes_yzc(i),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_FREE")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_FREE")
       endif
     enddo
     ! *types_*r
@@ -652,19 +657,19 @@ contains
     deallocate(decomp%xranks_yz,decomp%zranks_yz)
     ! x <=> z
     call MPI_COMM_FREE(decomp%xtozNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
     call MPI_COMM_FREE(decomp%ztoxNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
     ! x <=> y
     call MPI_COMM_FREE(decomp%xtoyNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
     call MPI_COMM_FREE(decomp%ytoxNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
     ! y <=> z
     call MPI_COMM_FREE(decomp%ytozNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
     call MPI_COMM_FREE(decomp%ztoyNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
 #endif
 
     return
@@ -1363,16 +1368,16 @@ contains
 
       ! Get rank_x and rank_z
       call MPI_Cart_rank(DECOMP_2D_COMM_CART_X,(/k,i/),rank_x,ierror)
-      if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_RANK")
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_RANK")
       call MPI_Cart_rank(DECOMP_2D_COMM_CART_Z,(/k,i/),rank_z,ierror)
-      if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_RANK")
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_RANK")
       ! Safety check
       if (rank_x == rank_z) then
         rk = rank_x
       else
         print *, "Rank ", nrank, " : error in prepare_buffer."
         print *, "Rank ", nrank, " : [rank_x, rank_z] = [",rank_x, rank_z,"]"
-        call decomp_2d_abort(13, "prepare_buffer: incompatible ranks.")
+        call decomp_2d_abort(__FILE__, __LINE__, 13, "prepare_buffer: incompatible ranks.")
       endif
 
       !
@@ -1399,7 +1404,7 @@ contains
         if (decomp%ztypes_xzr(rk+1) /= MPI_INTEGER .or. &
             decomp%ztypes_xzc(rk+1) /= MPI_INTEGER) then
           print *, "Rank ", nrank, " : error in prepare_buffer." 
-          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+          call decomp_2d_abort(__FILE__, __LINE__, 13, "prepare_buffer: collision detected.")
         endif
 
         decomp%zcnts_xz(rk+1)=1
@@ -1416,17 +1421,17 @@ contains
                (/decomp%zsz(1),subsize,decomp%z2dist(i)/), &
                (/0,offset,decomp%z2st(i)-decomp%zst(3)/), &
                MPI_ORDER_FORTRAN,real_type,decomp%ztypes_xzr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%ztypes_xzr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
         call MPI_Type_create_subarray(3,decomp%zsz, &
                (/decomp%zsz(1),subsize,decomp%z2dist(i)/), &
                (/0,offset,decomp%z2st(i)-decomp%zst(3)/), &
                MPI_ORDER_FORTRAN,complex_type,decomp%ztypes_xzc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%ztypes_xzc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
       endif
 
@@ -1438,7 +1443,7 @@ contains
         if (decomp%xtypes_xzr(rk+1) /= MPI_INTEGER .or. &
             decomp%xtypes_xzc(rk+1) /= MPI_INTEGER) then
           print *, "Rank ", nrank, " : error in prepare_buffer."
-          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+          call decomp_2d_abort(__FILE__, __LINE__, 13, "prepare_buffer: collision detected.")
         endif
 
         decomp%xcnts_xz(rk+1)=1
@@ -1455,17 +1460,17 @@ contains
                (/decomp%x1dist(k),subsize,decomp%xsz(3)/), &
                (/decomp%x1st(k)-decomp%xst(1),offset,0/), &
                MPI_ORDER_FORTRAN,real_type,decomp%xtypes_xzr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%xtypes_xzr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
         call MPI_Type_create_subarray(3,decomp%xsz, &
                (/decomp%x1dist(k),subsize,decomp%xsz(3)/), &
                (/decomp%x1st(k)-decomp%xst(1),offset,0/), &
                MPI_ORDER_FORTRAN,complex_type,decomp%xtypes_xzc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%xtypes_xzc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
       endif
 
@@ -1483,12 +1488,12 @@ contains
       index_src,zranks(1:index_src),zweights(1:index_src), &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       MPI_INFO_NULL,.true.,decomp%xtozNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
     call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       index_src,zranks(1:index_src),zweights(1:index_src), &
       MPI_INFO_NULL,.true.,decomp%ztoxNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
 #endif
 
     ! Init local variables (x <=> y transpose)
@@ -1502,13 +1507,13 @@ contains
 #endif
 
     call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,tmp_coord,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_COORDS")
     i = tmp_coord(2)
     do k=0,dims(1)-1
 
       ! Get rank_x and rank_z
       call MPI_Cart_rank(DECOMP_2D_COMM_CART_X,(/k,i/),rk,ierror)
-      if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_RANK")
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_RANK")
 
       !
       ! Local data
@@ -1534,7 +1539,7 @@ contains
         if (decomp%ztypes_xyr(rk+1) /= MPI_INTEGER .or. &
             decomp%ztypes_xyc(rk+1) /= MPI_INTEGER) then
           print *, "Rank ", nrank, " : error in prepare_buffer."
-          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+          call decomp_2d_abort(__FILE__, __LINE__, 13, "prepare_buffer: collision detected.")
         endif
 
         decomp%zcnts_xy(rk+1)=1
@@ -1551,17 +1556,17 @@ contains
                (/decomp%ysz(1),decomp%y1dist(k),subsize/), &
                (/0,decomp%y1st(k)-decomp%yst(2),offset/), &
                MPI_ORDER_FORTRAN,real_type,decomp%ztypes_xyr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%ztypes_xyr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
         call MPI_Type_create_subarray(3,decomp%ysz, &
                (/decomp%ysz(1),decomp%y1dist(k),subsize/), &
                (/0,decomp%y1st(k)-decomp%yst(2),offset/), &
                MPI_ORDER_FORTRAN,complex_type,decomp%ztypes_xyc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%ztypes_xyc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
       endif
 
@@ -1573,7 +1578,7 @@ contains
         if (decomp%xtypes_xyr(rk+1) /= MPI_INTEGER .or. &
             decomp%xtypes_xyc(rk+1) /= MPI_INTEGER) then
           print *, "Rank ", nrank, " : error in prepare_buffer."
-          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+          call decomp_2d_abort(__FILE__, __LINE__, 13, "prepare_buffer: collision detected.")
         endif
 
         decomp%xcnts_xy(rk+1)=1
@@ -1590,17 +1595,17 @@ contains
                (/decomp%x1dist(k),decomp%xsz(2),subsize/), &
                (/decomp%x1st(k)-decomp%xst(1),0,offset/), &
                MPI_ORDER_FORTRAN,real_type,decomp%xtypes_xyr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%xtypes_xyr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
         call MPI_Type_create_subarray(3,decomp%xsz, &
                (/decomp%x1dist(k),decomp%xsz(2),subsize/), &
                (/decomp%x1st(k)-decomp%xst(1),0,offset/), &
                MPI_ORDER_FORTRAN,complex_type,decomp%xtypes_xyc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%xtypes_xyc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
       endif
 
@@ -1617,12 +1622,12 @@ contains
       index_src,zranks(1:index_src),zweights(1:index_src), &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       MPI_INFO_NULL,.true.,decomp%xtoyNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
     call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       index_src,zranks(1:index_src),zweights(1:index_src), &
       MPI_INFO_NULL,.true.,decomp%ytoxNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
 #endif
 
     ! Init local variables (y <=> z transpose)
@@ -1636,13 +1641,13 @@ contains
 #endif
       
     call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,tmp_coord,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_COORDS")
     k = tmp_coord(1)
     do i=0,dims(2)-1
 
       ! Get rank_x and rank_z
       call MPI_Cart_rank(DECOMP_2D_COMM_CART_X,(/k,i/),rk,ierror)
-      if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_RANK")
+      if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_RANK")
 
       !   
       ! Local data
@@ -1668,7 +1673,7 @@ contains
         if (decomp%ztypes_yzr(rk+1) /= MPI_INTEGER .or. &
             decomp%ztypes_yzc(rk+1) /= MPI_INTEGER) then
           print *, "Rank ", nrank, " : error in prepare_buffer." 
-          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+          call decomp_2d_abort(__FILE__, __LINE__, 13, "prepare_buffer: collision detected.")
         endif
 
         decomp%zcnts_yz(rk+1)=1
@@ -1685,17 +1690,17 @@ contains
                (/subsize,decomp%zsz(2),decomp%z2dist(i)/), &
                (/offset,0,decomp%z2st(i)-decomp%zst(3)/), &
                MPI_ORDER_FORTRAN,real_type,decomp%ztypes_yzr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%ztypes_yzr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
         call MPI_Type_create_subarray(3,decomp%zsz, &
                (/subsize,decomp%zsz(2),decomp%z2dist(i)/), &
                (/offset,0,decomp%z2st(i)-decomp%zst(3)/), &
                MPI_ORDER_FORTRAN,complex_type,decomp%ztypes_yzc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%ztypes_yzc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
       endif
 
@@ -1707,7 +1712,7 @@ contains
         if (decomp%xtypes_yzr(rk+1) /= MPI_INTEGER .or. &
             decomp%xtypes_yzc(rk+1) /= MPI_INTEGER) then
           print *, "Rank ", nrank, " : error in prepare_buffer."
-          call decomp_2d_abort(13, "prepare_buffer: collision detected.")
+          call decomp_2d_abort(__FILE__, __LINE__, 13, "prepare_buffer: collision detected.")
         endif
 
         decomp%xcnts_yz(rk+1)=1
@@ -1724,17 +1729,17 @@ contains
                (/subsize,decomp%y2dist(i),decomp%xsz(3)/), &
                (/offset,decomp%y2st(i)-decomp%yst(2),0/), &
                MPI_ORDER_FORTRAN,real_type,decomp%xtypes_yzr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%xtypes_yzr(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
         call MPI_Type_create_subarray(3,decomp%ysz, &
                (/subsize,decomp%y2dist(i),decomp%xsz(3)/), &
                (/offset,decomp%y2st(i)-decomp%yst(2),0/), &
                MPI_ORDER_FORTRAN,complex_type,decomp%xtypes_yzc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_CREATE_SUBARRAY")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_CREATE_SUBARRAY")
         call MPI_Type_commit(decomp%xtypes_yzc(rk+1),ierror)
-        if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_TYPE_COMMIT")
+        if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_TYPE_COMMIT")
 
       endif
 
@@ -1751,12 +1756,12 @@ contains
       index_src,zranks(1:index_src),zweights(1:index_src), &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       MPI_INFO_NULL,.true.,decomp%ytozNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
     call MPI_Dist_graph_create_adjacent(DECOMP_2D_COMM_CART_X, &
       index_dest,xranks(1:index_dest),xweights(1:index_dest), &
       index_src,zranks(1:index_src),zweights(1:index_src), &
       MPI_INFO_NULL,.true.,decomp%ztoyNeighborComm,ierror)
-    if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
+    if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_DIST_GRAPH_CREATE_ADJACENT")
 #endif
 
     return
@@ -1819,20 +1824,20 @@ contains
           periodic(2) = .false.
           call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
                .false.,DECOMP_2D_COMM_CART_X, ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
           call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims,periodic, &
                .false., DECOMP_2D_COMM_CART_Z, ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_CREATE")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_CREATE")
           call MPI_CART_COORDS(DECOMP_2D_COMM_CART_X,nrank,2,coord,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_COORDS")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_COORDS")
 
           ! communicators defining sub-groups for ALLTOALL(V)
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.true.,.false./), &
                DECOMP_2D_COMM_COL,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
           call MPI_CART_SUB(DECOMP_2D_COMM_CART_X,(/.false.,.true./), &
                DECOMP_2D_COMM_ROW,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_CART_SUB")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_CART_SUB")
 
           ! generate 2D decomposition information for this row*col
           call decomp_info_init(nx_global,ny_global,nz_global,decomp)
@@ -1854,17 +1859,17 @@ contains
           call decomp_info_finalize(decomp)
 
           call MPI_COMM_FREE(DECOMP_2D_COMM_COL,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
           call MPI_COMM_FREE(DECOMP_2D_COMM_ROW,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
           call MPI_COMM_FREE(DECOMP_2D_COMM_CART_X,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
           call MPI_COMM_FREE(DECOMP_2D_COMM_CART_Z,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_COMM_FREE")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_COMM_FREE")
 
           call MPI_ALLREDUCE(t2,t1,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
                MPI_COMM_WORLD,ierror)
-          if (ierror /= 0) call decomp_2d_abort(ierror, "MPI_ALLREDUCE")
+          if (ierror /= 0) call decomp_2d_abort(__FILE__, __LINE__, ierror, "MPI_ALLREDUCE")
           t1 = t1 / dble(nproc)
 
           if (nrank==0) then
@@ -1890,7 +1895,7 @@ contains
        end if
     else
        errorcode = 9
-       call decomp_2d_abort(errorcode, &
+       call decomp_2d_abort(__FILE__, __LINE__, errorcode, &
             'The processor-grid auto-tuning code failed. ' // &
             'The number of processes requested is probably too large.')
     end if
@@ -1909,7 +1914,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Error handling
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine decomp_2d_abort(errorcode, msg)
+  subroutine decomp_2d_abort_basic(errorcode, msg)
 
     implicit none
 
@@ -1924,8 +1929,26 @@ contains
     end if
     call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
 
-    return
-  end subroutine decomp_2d_abort
+  end subroutine decomp_2d_abort_basic
+
+  subroutine decomp_2d_abort_file_line(file, line, errorcode, msg)
+
+    implicit none
+
+    integer, intent(IN) :: errorcode, line
+    character(len=*), intent(IN) :: msg, file
+
+    integer :: ierror
+
+    if (nrank==0) then
+       write(*,*) '2DECOMP&FFT ERROR - errorcode: ', errorcode
+       write(*,*) 'ERROR IN FILE ' // file
+       write(*,*) '         LINE ', line
+       write(*,*) 'ERROR MESSAGE: ' // msg
+    end if
+    call MPI_ABORT(MPI_COMM_WORLD,errorcode,ierror)
+
+  end subroutine decomp_2d_abort_file_line
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

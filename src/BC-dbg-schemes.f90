@@ -49,11 +49,6 @@ contains
     USE decomp_2d_io
     USE variables
     USE param
-#ifdef MPI3
-    USE MPI_f08
-#else
-    USE MPI
-#endif
 
     implicit none
 
@@ -63,9 +58,8 @@ contains
     integer :: code, ierror
 
     call debug_schemes()
-    call MPI_ABORT(MPI_COMM_WORLD,code,ierror)
+    call decomp_2d_abort(__FILE__, __LINE__, 0,"End of benchmark")
 
-    return
   end subroutine init_dbg
   !********************************************************************
   subroutine boundary_conditions_dbg (ux,uy,uz,phi)

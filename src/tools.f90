@@ -64,7 +64,7 @@ contains
 
     implicit none
 
-    integer :: code,ierr2,i,j,k,is,jglob
+    integer :: code,i,j,k,is,jglob
     real(mytype) :: phimax,phimin,phimax1,phimin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
     real(mytype),dimension(2,numscalar) :: phimaxin,phimaxout
@@ -84,7 +84,7 @@ contains
     enddo
 
     call MPI_ALLREDUCE(phimaxin,phimaxout,numscalar*2,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
     do is=1,numscalar
       phimin1 = -phimaxout(1,is)
@@ -93,8 +93,8 @@ contains
       if (nrank == 0) print *,'Phi'//char(48+is)//' min max=', real(phimin1,4), real(phimax1,4)
 
       if (phimin1 < uvwt_lbound(4) .or. phimax1 >= uvwt_ubound(4)) then
-         if (nrank == 0) print *,'Scalar diverged! SIMULATION IS STOPPED!'
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+         call decomp_2d_abort(__FILE__, __LINE__, 0, &
+                 'Scalar diverged! SIMULATION IS STOPPED!')
          stop
       endif
 
@@ -117,7 +117,7 @@ contains
 
     implicit none
 
-    integer :: code,ierr2,i,j,k
+    integer :: code,i,j,k
     real(mytype) :: uxmax,uymax,uzmax,uxmin,uymin,uzmin
     real(mytype) :: uxmax1,uymax1,uzmax1,uxmin1,uymin1,uzmin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
@@ -141,7 +141,7 @@ contains
 
     umaxin = (/uxmax, uymax, uzmax, uxmin, uymin, uzmin/)
     call MPI_ALLREDUCE(umaxin,umaxout,6,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
     uxmax1= umaxout(1)
     uymax1= umaxout(2)
@@ -159,8 +159,8 @@ contains
     if (uxmin1 < uvwt_lbound(1) .or. uxmax1 >= uvwt_ubound(1) .or. &
         uymin1 < uvwt_lbound(2) .or. uymax1 >= uvwt_ubound(2) .or. &
         uzmin1 < uvwt_lbound(3) .or. uzmax1 >= uvwt_ubound(3) ) then
-      if (nrank == 0) print *,'Velocity diverged! SIMULATION IS STOPPED!'
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+      call decomp_2d_abort(__FILE__, __LINE__, 0, &
+              'Velocity diverged! SIMULATION IS STOPPED!')
       stop
     endif
 
@@ -251,7 +251,7 @@ contains
 #else
     integer :: fh
 #endif
-    integer :: i,j,k,iresflg,nzmsize,code,ierr2,is,it,iounit
+    integer :: i,j,k,iresflg,nzmsize,code,is,it,iounit
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
     real(mytype), dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
@@ -297,15 +297,13 @@ contains
            print *, "Error: Impossible to open "//trim(filename)
            print *,'==========================================================='
          endif
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
        endif
 
        filesize = 0_MPI_OFFSET_KIND
        call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
-       if (code /= 0) then
-         if (nrank == 0) print *, "Error in MPI_FILE_SET_SIZE"
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
-       endif
+       if (code /= 0) &
+         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_SET_SIZE")
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_write_var(fh,disp,1,ux1)
        call decomp_2d_write_var(fh,disp,1,uy1)
@@ -354,7 +352,7 @@ contains
            print *, "Error: Impossible to close "//trim(filename)
            print *,'==========================================================='
          endif
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
        endif
        ! Write info file for restart - Kay Schäfer
        if (nrank == 0) then
@@ -404,7 +402,7 @@ contains
            print *, "Error: Impossible to open "//trim(filestart)
            print *,'==========================================================='
          endif
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
        endif
        disp = 0_MPI_OFFSET_KIND
        call decomp_2d_read_var(fh,disp,1,ux1)
@@ -454,7 +452,7 @@ contains
            print *, "Error: Impossible to close "//trim(filestart)
            print *,'==========================================================='
          endif
-         call MPI_ABORT(MPI_COMM_WORLD,code,ierr2)
+         call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
        endif
 
        !! Read time of restart file
@@ -611,7 +609,7 @@ contains
 #else
     integer :: fh
 #endif
-    integer :: code,ierr2,ifileinflow
+    integer :: code,ifileinflow
     real(mytype), dimension(NTimeSteps,xsize(2),xsize(3)) :: ux1,uy1,uz1
     integer (kind=MPI_OFFSET_KIND) :: disp
     character(20) :: fninflow
@@ -633,7 +631,7 @@ contains
         print *,'Error: Impossible to open '//trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
         print *,'==========================================================='
       endif
-      call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
     endif
     disp = 0_MPI_OFFSET_KIND
     call decomp_2d_read_inflow(fh,disp,ntimesteps,ux_inflow)
@@ -646,7 +644,7 @@ contains
         print *,'Error: Impossible to close '//trim(inflowpath)//'inflow'//trim(adjustl(fninflow))
         print *,'==========================================================='
       endif
-      call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
     endif
 
   end subroutine read_inflow
@@ -700,7 +698,7 @@ contains
 #else
     integer :: fh
 #endif
-    integer :: code, ierr2
+    integer :: code
     integer (kind=MPI_OFFSET_KIND) :: filesize, disp
     character(20) :: fnoutflow
     
@@ -715,11 +713,11 @@ contains
         print *,'Error: Impossible to open '//'./out/inflow'//trim(adjustl(fnoutflow))
         print *,'==========================================================='
       endif
-      call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_OPEN")
     endif
     filesize = 0_MPI_OFFSET_KIND
     call MPI_FILE_SET_SIZE(fh,filesize,code)  ! guarantee overwriting
-    if (code /= 0) call decomp_2d_abort(code, "MPI_FILE_SET_SIZE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_FILE_SET_SIZE")
     disp = 0_MPI_OFFSET_KIND
     call decomp_2d_write_outflow(fh,disp,ntimesteps,ux_recoutflow)
     call decomp_2d_write_outflow(fh,disp,ntimesteps,uy_recoutflow)
@@ -731,7 +729,7 @@ contains
         print *,'Error: Impossible to close '//'./out/inflow'//trim(adjustl(fnoutflow))
         print *,'==========================================================='
       endif
-      call MPI_ABORT(MPI_COMM_WORLD, code, ierr2)
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_FILE_CLOSE")
     endif
     
   end subroutine write_outflow
@@ -831,7 +829,7 @@ contains
     cflmax_in =  (/maxvalue_x, maxvalue_y, maxvalue_z, maxvalue_sum/)
 
     call MPI_REDUCE(cflmax_in,cflmax_out,4,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
     if (nrank == 0) then
       write(*,"(' CFL_x                  : ',F17.8)") cflmax_out(1)*dt
@@ -970,11 +968,11 @@ contains
 
     ! Parallel
     call MPI_ALLREDUCE(MPI_IN_PLACE,l1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(MPI_IN_PLACE,l2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(MPI_IN_PLACE,linf,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
     ! Rescaling
     l1 = l1 / ntot
@@ -1570,7 +1568,7 @@ subroutine tripping(tb,ta)
   !Initialization h_nxt  (always bounded by xsize(3)^2 operations)
   if (itime == ifirst) then
      call MPI_BCAST(h_coeff,z_modes,real_type,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
      nxt_itr=0
      do k=1,xsize(3)
         h_nxt(k)=0.0
@@ -1599,7 +1597,7 @@ subroutine tripping(tb,ta)
      end if
 
      call MPI_BCAST(h_coeff,z_modes,real_type,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
 
 
      !Initialization h_nxt  (always bounded by z_steps^2 operations)
@@ -1706,15 +1704,15 @@ subroutine tbl_tripping(tb,ta)
   !Initialization h_nxt  (always bounded by xsize(3)^2 operations)
   if (itime == ifirst) then
      call MPI_BCAST(h_coeff1,z_modes,real_type,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
      call MPI_BCAST(phase1,z_modes,real_type,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
      call MPI_BCAST(h_coeff2,z_modes,real_type,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
      call MPI_BCAST(phase2,z_modes,real_type,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
      call MPI_BCAST(nxt_itr,1,mpi_int,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
 
      do k=1,xsize(3)
         h_1(k)=0.0
@@ -1745,9 +1743,9 @@ subroutine tbl_tripping(tb,ta)
      end if
 
      call MPI_BCAST(h_coeff1,z_modes,real_type,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
      call MPI_BCAST(phase1,z_modes,real_type,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_BCAST")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BCAST")
 
      !Initialization h_nxt  (always bounded by z_steps^2 operations)
      do k=1,xsize(3)
@@ -1780,7 +1778,7 @@ subroutine tbl_tripping(tb,ta)
   enddo
 
   call MPI_BARRIER(MPI_COMM_WORLD,code)
-  if (code /= 0) call decomp_2d_abort(code, "MPI_BARRIER")
+  if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_BARRIER")
   !if (nrank==0) print*, maxval(ta(:,:,:)),minval(ta), z_modes
 
   return

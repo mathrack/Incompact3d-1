@@ -278,7 +278,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjxmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     ! if (nrank==0) print*,'        nobjxmax=',mpi_aux_i
 
     nobjxraf(:,:)=0
@@ -307,10 +307,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjxmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     ! if (nrank==0) print*,'        nobjxmaxraf=',mpi_aux_i
     call MPI_REDUCE(ibug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     ! if (nrank==0) print*,'        ibug=',mpi_aux_i
     ! if (nrank==0) print*,'    step 5'
 
@@ -337,7 +337,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjymax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     ! if (nrank==0) print*,'        nobjymax=',mpi_aux_i
 
     nobjyraf(:,:)=0
@@ -366,10 +366,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjymaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     ! if (nrank==0) print*,'        nobjymaxraf=',mpi_aux_i
     call MPI_REDUCE(jbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     ! if (nrank==0) print*,'        jbug=',mpi_aux_i
     ! if (nrank==0) print*,'    step 6'
 
@@ -396,7 +396,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjzmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     ! if (nrank==0) print*,'        nobjzmax=',mpi_aux_i
 
     nobjzraf(:,:)=0
@@ -425,10 +425,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjzmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     ! if (nrank==0) print*,'        nobjzmaxraf=',mpi_aux_i
     call MPI_REDUCE(kbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     ! if (nrank==0) print*,'        kbug=',mpi_aux_i
     ! if (nrank==0) print*,'    step 7'
 
@@ -803,7 +803,7 @@ subroutine verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
      enddo
   enddo
   call MPI_REDUCE(ising,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-  if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+  if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
   ! if (nrank==0) print*,'        number of points with potential problem in X :',mpi_aux_i
   ! if (nrank==0) print*,'    step 11'
 
@@ -847,7 +847,7 @@ subroutine verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
      enddo
   enddo
   call MPI_REDUCE(jsing,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-  if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+  if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
   ! if (nrank==0) print*,'        number of points with potential problem in Y :',mpi_aux_i
   ! if (nrank==0) print*,'    step 12'
 
@@ -892,7 +892,7 @@ subroutine verif_epsi(ep1,npif,izap,nx,ny,nz,nobjmax,&
         enddo
      enddo
      call MPI_REDUCE(ksing,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
-     if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+     if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
      ! if (nrank==0) print*,'        number of points with potential problem in Z :',mpi_aux_i
   endif
   ! if (nrank==0) print*,'    step 13'

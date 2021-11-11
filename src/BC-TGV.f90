@@ -389,7 +389,7 @@ contains
       enddo
       enddo
       call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
       enst=enst/(nxc*nyc*nzc)
       
       !SPATIALLY-AVERAGED ENERGY DISSIPATION
@@ -408,7 +408,7 @@ contains
       enddo
       enddo
       call MPI_ALLREDUCE(temp1,eps,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-      if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+      if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
       eps=eps/(nxc*nyc*nzc)
 
       !SPATIALLY-AVERAGED TKE of velocity fields
@@ -421,7 +421,7 @@ contains
        enddo
        enddo
        call MPI_ALLREDUCE(temp1,eek,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        eek=eek/(nxc*nyc*nzc)
 
        !SECOND DERIVATIVES
@@ -464,7 +464,7 @@ contains
        enddo
        enddo
        call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        eps2=eps2/(nxc*nyc*nzc)
 
        if (nrank==0) then
@@ -587,7 +587,7 @@ contains
     end do
 
     call MPI_REDUCE(mp,mp1,numscalar,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
     return
   end subroutine suspended

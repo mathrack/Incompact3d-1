@@ -105,7 +105,7 @@ contains
 
   subroutine geomcomplex_sandbox(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, yp, remp)
 
-    use decomp_2d, only : mytype, xstart, xend
+    use decomp_2d, only : mytype, xstart, xend, decomp_2d_abort
     use decomp_2d_io, only : decomp_2d_read_one
     use param, only : one, two
     use variables, only : nx, nz
@@ -135,8 +135,8 @@ contains
         !
     else
       ! Just the standard epsi(nx,ny,nz) is loaded
-      print *,'Invalid parameters at geomcomplex_sandbox'
-      call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+      call decomp_2d_abort(__FILE__, __LINE__, -1, &
+              'Invalid parameters at geomcomplex_sandbox')
     endif
     !
     return
@@ -295,9 +295,9 @@ contains
     enddo
 
     call MPI_ALLREDUCE(uxmax,uxmax1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(uxmin,uxmin1,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
     if (u1 == zero) then
       cx=(half*(uxmax1+uxmin1))*gdt(itr)*udx
@@ -370,7 +370,7 @@ contains
     int = sum(tmp)
 
     call MPI_ALLREDUCE(int,int1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
     if (nrank==0) write(*,*) "Integration at frc : ",int1
 
@@ -410,7 +410,7 @@ contains
     int = sum(tmp)
 
     call MPI_ALLREDUCE(int,int1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
 
     if (nrank==0) write(*,*) "Integration at frc SZA : ",int1
 

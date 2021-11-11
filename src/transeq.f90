@@ -199,7 +199,7 @@ contains
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(:,1:3), code)
     if (code /= 0 .or. any(mpi_stat(MPI_ERROR,1:3) /= 0)) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #else
     call transpose_x_to_y(ux1,ux2)
@@ -279,7 +279,7 @@ contains
     call MPI_WAITALL(3, mpi_req(1:3), mpi_stat(:,1:3), code)
     if (code /= 0 .or. any(mpi_stat(MPI_ERROR,1:3) /= 0)) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #else
     call transpose_y_to_z(ux2,ux3)
@@ -512,7 +512,7 @@ contains
     call MPI_WAITALL(6, mpi_req(1:6), mpi_stat(:,1:6), code)
     if (code /= 0 .or. any(mpi_stat(MPI_ERROR,1:6) /= 0)) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
     ta1(:,:,:) = ta1(:,:,:) + dux1(:,:,:,1)
     tb1(:,:,:) = tb1(:,:,:) + duy1(:,:,:,1)
@@ -949,7 +949,7 @@ contains
     if (code /= 0 .or. mpi_stat(MPI_ERROR) /= 0) then
       write(*,*) "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR)
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #else
     call transpose_x_to_y(phi1(:,:,:),td2(:,:,:))
@@ -1034,7 +1034,7 @@ contains
     if (code /= 0 .or. mpi_stat(MPI_ERROR) /= 0) then
       print *, "Error in MPI_WAIT: ", code, mpi_stat(MPI_ERROR)
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #else
     call transpose_y_to_z(td2(:,:,:),td3(:,:,:))

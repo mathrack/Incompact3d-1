@@ -319,7 +319,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #else
     call transpose_x_to_y(pp1,duxdxp2,ph4)!->NXM NY NZ
@@ -339,7 +339,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #endif
 
@@ -357,7 +357,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #endif
 
@@ -373,7 +373,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #else
     call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ
@@ -393,7 +393,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #endif
 
@@ -420,9 +420,9 @@ contains
     tmoy=tmoy/nvect3
 
     call MPI_REDUCE(tmax,tmax1,1,real_type,MPI_MAX,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
     call MPI_REDUCE(tmoy,tmoy1,1,real_type,MPI_SUM,0,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_REDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_REDUCE")
 
     if ((nrank==0).and.(nlock > 0)) then
        if (nlock==2) then
@@ -502,7 +502,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #else
     call transpose_z_to_y(pgz3,pgz2,ph3) !nxm nym nz
@@ -529,7 +529,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #endif
 
@@ -547,7 +547,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #else
     call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
@@ -567,7 +567,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #endif
 
@@ -583,7 +583,7 @@ contains
     call MPI_WAIT(mpi_req(ireq), mpi_stat(:,ireq), code)
     if (code /= 0 .or. mpi_stat(MPI_ERROR,ireq) /= 0) then
 #endif
-      call decomp_2d_abort(code,"MPI_WAIT")
+      call decomp_2d_abort(__FILE__, __LINE__, code,"MPI_WAIT")
     endif
 #endif
 
@@ -683,7 +683,7 @@ contains
     logical, dimension(2) :: dummy_periods
 
     call MPI_CART_GET(DECOMP_2D_COMM_CART_X, 2, dims, dummy_periods, dummy_coords, code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_CART_GET")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_CART_GET")
 
     !********NCLX==2*************************************
     !we are in X pencils:
@@ -697,7 +697,7 @@ contains
           enddo
        enddo
        call MPI_ALLREDUCE(ut1,ut11,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        ut11=ut11/(real(ny*nz,mytype))
        ut=zero
        do k=1,xsize(3)
@@ -706,7 +706,7 @@ contains
           enddo
        enddo
        call MPI_ALLREDUCE(ut,utt,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        utt=utt/(real(ny*nz,mytype))
        if (nrank==0) print *,'Flow rate x I/O/O-I',real(ut11,4),real(utt,4),real(utt-ut11,4)
        do k=1,xsize(3)
@@ -1249,7 +1249,7 @@ contains
     IF (poissiter.EQ.0) THEN
        errloc = SUM(dv3**2)
        CALL MPI_ALLREDUCE(errloc,divup3norm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        divup3norm = SQRT(divup3norm / nxm / nym / nzm)
 
        IF (nrank.EQ.0) THEN
@@ -1260,7 +1260,7 @@ contains
        !! Compute RMS change
        errloc = SUM((pp3(:,:,:,1) - pp3(:,:,:,2))**2)
        CALL MPI_ALLREDUCE(errloc,errglob,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
        errglob = SQRT(errglob / nxm / nym / nzm)
 
        IF (nrank.EQ.0) THEN
@@ -1335,7 +1335,7 @@ contains
        rhomin = MINVAL(rho1(:,:,:,1))
 
        CALL MPI_ALLREDUCE(rhomin,rho0,1,real_type,MPI_MIN,MPI_COMM_WORLD,code)
-       if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+       if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     ENDIF
 
     ta1(:,:,:) = (one - rho0 / rho1(:,:,:,1)) * px1(:,:,:)
@@ -1390,7 +1390,7 @@ contains
       ! ut1=ut1/real(ysize(3),mytype)
     endif
     call MPI_ALLREDUCE(ut1,utt1,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     utt1=utt1/real(nz,mytype) !! Volume flow rate per unit spanwise dist
 
     ! Flow rate at the outlet
@@ -1404,7 +1404,7 @@ contains
       ! ut2=ut2/real(ysize(3),mytype)
     endif
     call MPI_ALLREDUCE(ut2,utt2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     utt2=utt2/real(nz,mytype) !! Volume flow rate per unit spanwise dist
 
     ! Flow rate at the top and bottom
@@ -1417,9 +1417,9 @@ contains
       enddo
     enddo
     call MPI_ALLREDUCE(ut3,utt3,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     call MPI_ALLREDUCE(ut4,utt4,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (code /= 0) call decomp_2d_abort(code, "MPI_ALLREDUCE")
+    if (code /= 0) call decomp_2d_abort(__FILE__, __LINE__, code, "MPI_ALLREDUCE")
     utt3=utt3/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
     utt4=utt4/(real(nx*nz,mytype))*xlx  !!! Volume flow rate per unit spanwise dist
 
