@@ -880,7 +880,7 @@ contains
   implicit none
 
   ! Arguments
-  real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+  real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
   real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: nut1
 
   ! Local variables
@@ -1052,7 +1052,7 @@ end subroutine wale
     implicit none
 
     ! Arguments
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, nut1, ep1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, nut1, ep1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsx1, sgsy1, sgsz1
 
     ! Local variables
@@ -1204,7 +1204,7 @@ end subroutine wale
 
     ! Arguments
     integer, intent(in) :: is
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: phi1, nut1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: phi1, nut1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: sgsphi1
 
     ! Local variables
