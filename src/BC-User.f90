@@ -168,7 +168,8 @@ contains
     phiavg = phiavg / real(nx*ny, kind=mytype)
     phivar = phivar / real(nx*ny, kind=mytype)
     ! Rank 0 save the values in the file
-    if (io_bulk/=output_unit) write(io_bulk,*) phiavg, phivar-phiavg**2
+    ! Replace E14.6 => E24.16 to print all the digits
+    if (io_bulk/=output_unit) write(io_bulk,'(6(E14.6))') phiavg, phivar-phiavg**2
 
   end subroutine postprocess_user
 
