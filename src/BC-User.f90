@@ -46,6 +46,7 @@ contains
     ! Open IO unit for bulk quantities on master rank
     if (nrank.eq.0) then
        open(newunit=io_bulk, file=bulk_file, form='formatted')
+       write(io_bulk,*) "u      v       T       u'²     v'²     T'²"
     endif
 
     ! Velocity is zero
