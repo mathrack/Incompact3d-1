@@ -43,7 +43,7 @@ nclzn = 0
 
 ! Gravity vector
 gravx = 0.
-gravy = -1.
+gravy = 1.
 gravz = 0.
 
 /End
