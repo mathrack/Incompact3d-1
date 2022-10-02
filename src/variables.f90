@@ -31,6 +31,8 @@ module var
   !arrays for statistic collection
   real(mytype), save, allocatable, dimension(:,:,:) :: umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phimean,phiphimean,uphimean,vphimean,wphimean
+  real(mytype), save, allocatable, dimension(:,:,:) :: u3mean, v3mean, u4mean, v4mean
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: phi3mean, phi4mean
 
   !arrays for visualization
   real(mytype), save, allocatable, dimension(:,:,:) :: uvisu

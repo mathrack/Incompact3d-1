@@ -47,10 +47,19 @@ contains
        call decomp_2d_register_variable(io_statistics, "uwmean", 1, 1, 0, mytype)
        call decomp_2d_register_variable(io_statistics, "vwmean", 1, 1, 0, mytype)
 
+       call decomp_2d_register_variable(io_statistics, "u3mean", 1, 1, 0, mytype)                    
+       call decomp_2d_register_variable(io_statistics, "v3mean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "u4mean", 1, 1, 0, mytype)                    
+       call decomp_2d_register_variable(io_statistics, "v4mean", 1, 1, 0, mytype)
+
        do is=1, numscalar
           write(varname,"('phi',I2.2)") is
           call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
           write(varname,"('phiphi',I2.2)") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+          write(varname,"('phi3',I2.2)") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+          write(varname,"('phi4',I2.2)") is
           call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
        enddo
 
@@ -73,6 +82,8 @@ contains
     use var, only : uvmean, uwmean
     use var, only : vwmean
     use var, only : phimean, phiphimean
+    use var, only : u3mean, v3mean, u4mean, v4mean
+    use var, only : phi3mean, phi4mean
 
     implicit none
 
@@ -87,9 +98,15 @@ contains
     uvmean = zero
     uwmean = zero
     vwmean = zero
+    u3mean = zero
+    v4mean = zero
+    u4mean = zero
+    v4mean = zero
     if (iscalar==1) then
       phimean = zero
       phiphimean = zero
+      phi3mean = zero
+      phi4mean = zero
     endif
 
     call init_statistic_adios2
@@ -157,6 +174,8 @@ contains
     use var, only : uvmean, uwmean
     use var, only : vwmean
     use var, only : phimean, phiphimean
+    use var, only : u3mean, v3mean, u4mean, v4mean
+    use var, only : phi3mean, phi4mean
 
     implicit none
 
@@ -210,12 +229,21 @@ contains
     call read_or_write_one_stat(flag_read, gen_statname("uwmean"), uwmean)
     call read_or_write_one_stat(flag_read, gen_statname("vwmean"), vwmean)
 
+    call read_or_write_one_stat(flag_read, gen_statname("u3mean"), u3mean)
+    call read_or_write_one_stat(flag_read, gen_statname("v3mean"), v3mean)
+    call read_or_write_one_stat(flag_read, gen_statname("u4mean"), u4mean)
+    call read_or_write_one_stat(flag_read, gen_statname("v4mean"), v4mean)
+
     if (iscalar==1) then
        do is=1, numscalar
           write(filename,"('phi',I2.2)") is
           call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phimean(:,:,:,is))
           write(filename,"('phiphi',I2.2)") is
           call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phiphimean(:,:,:,is))
+          write(filename,"('phi3',I2.2)") is
+          call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phi3mean(:,:,:,is))
+          write(filename,"('phi4',I2.2)") is
+          call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phi4mean(:,:,:,is))
        enddo
     endif
 
@@ -284,6 +312,8 @@ contains
     use var, only : uvmean, uwmean
     use var, only : vwmean
     use var, only : phimean, phiphimean
+    use var, only : u3mean, v3mean, u4mean, v4mean
+    use var, only : phi3mean, phi4mean
 
     implicit none
 
@@ -328,6 +358,12 @@ contains
     call update_variance_vector(uumean, vvmean, wwmean, uvmean, uwmean, vwmean, &
                                 ux1, uy1, uz1, ep1)
 
+    !! Order 3 and 4
+    call update_average_scalar(u3mean, ux1**3, ep1)
+    call update_average_scalar(v3mean, uy1**3, ep1)
+    call update_average_scalar(u4mean, ux1**4, ep1)
+    call update_average_scalar(v4mean, uy1**4, ep1)
+
     !! Scalar statistics
     if (iscalar==1) then
        do is=1, numscalar
@@ -336,6 +372,10 @@ contains
 
           !phiphimean=phi1*phi1
           call update_average_scalar(phiphimean(:,:,:,is), phi1(:,:,:,is)*phi1(:,:,:,is), ep1)
+
+          ! Order 3 and 4
+          call update_average_scalar(phi3mean(:,:,:,is), phi1(:,:,:,is)**3, ep1)
+          call update_average_scalar(phi4mean(:,:,:,is), phi1(:,:,:,is)**4, ep1)
        enddo
     endif
 

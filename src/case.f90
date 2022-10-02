@@ -358,7 +358,11 @@ contains
 
     implicit none
     
-    if (itype .eq. itype_tgv) then
+    if (itype .eq. itype_user) then
+
+       call visu_user_init(case_visu_init)
+
+    else if (itype .eq. itype_tgv) then
 
        call visu_tgv_init(case_visu_init)
 

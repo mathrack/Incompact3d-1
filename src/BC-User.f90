@@ -7,16 +7,25 @@ module user_sim
   USE decomp_2d
   USE variables
   USE param
+  use MPI
+  use var, only : nzmsize
+  use iso_fortran_env, only : output_unit
 
   IMPLICIT NONE
 
-  real(mytype), save, allocatable, dimension(:,:,:) :: vol1,volSimps1
-  integer :: FS
-  character(len=100) :: fileformat
-  character(len=1),parameter :: NL=char(10) !new line character
+  ! Temperature on the left wall
+  real(mytype), parameter :: temp_l = 0.5_mytype
+
+  ! Temperature difference between both walls
+  real(mytype), parameter :: deltaT = 1._mytype
+
+  ! IO unit and file name for bulk quantities
+  integer, save :: io_bulk = output_unit
+  character(len=*), parameter :: bulk_file = "cavity_bulk.dat"
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_user, boundary_conditions_user, postprocess_user, visu_user
+  PUBLIC :: init_user, boundary_conditions_user, postprocess_user, &
+            visu_user_init, visu_user
 
 contains
 
@@ -27,71 +36,72 @@ contains
 
     implicit none
 
+    ! Arguments
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
 
-    real(mytype) :: y,r,um,r3,x,z,h,ct
-    real(mytype) :: cx0,cy0,cz0,hg,lg
-    integer :: k,j,i,ierror,is,code
-    integer, dimension (:), allocatable :: seed
-    integer ::  isize
+    ! Local variables
+    integer :: i
 
-    if (iscalar==1) then
-
-       phi1(:,:,:,:) = zero
+    ! Open IO unit for bulk quantities on master rank
+    if (nrank.eq.0) then
+       open(newunit=io_bulk, file=bulk_file, form='formatted')
     endif
 
-    if (iin.eq.0) then !empty domain
+    ! Velocity is zero
+    ux1 = zero
+    uy1 = zero
+    uz1 = zero
 
-       if (nrank==0) write(*,*) "Empty initial domain!"
-
-       ux1=zero; uy1=zero; uz1=zero
-
-    endif
-
-    if (iin.eq.1) then !generation of a random noise
-
-       !INIT FOR G AND U=MEAN FLOW + NOISE
-       do k=1,xsize(3)
-          do j=1,xsize(2)
-             do i=1,xsize(1)
-                ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
-                uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
-                uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
-             enddo
-          enddo
+    ! Linear temperature profile
+    if (numscalar.ge.1) then
+       do i = 1, xsize(1)
+          phi1(i,:,:,:) = temp_l - deltaT * (i-1) / real(xsize(1)-1, kind=mytype)
        enddo
-
     endif
 
-#ifdef DEBG
-    if (nrank  ==  0) write(*,*) '# init end ok'
-#endif
-
-    return
   end subroutine init_user
 
   subroutine boundary_conditions_user (ux,uy,uz,phi,ep)
 
     implicit none
 
+    ! Arguments
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz,ep
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
+    ! Local arguments
+    integer :: i
+
+    ! Velocity
     IF (nclx1.EQ.2) THEN
     ENDIF
     IF (nclxn.EQ.2) THEN
     ENDIF
+    IF (ncly1.EQ.2.and.xstart(2).eq.1) THEN
+    ENDIF
+    IF (nclyn.EQ.2.and.xend(2).eq.ny) THEN
+    ENDIF
 
-    IF (ncly1.EQ.2) THEN
-    ENDIF
-    IF (nclyn.EQ.2) THEN
-    ENDIF
-
-    IF (nclz1.EQ.2) THEN
-    ENDIF
-    IF (nclzn.EQ.2) THEN
-    ENDIF
+    ! Scalar
+    if (numscalar.ge.1) then
+       if (nclxS1.eq.2) then
+          phi(1,:,:,:) = temp_l
+       endif
+       if (nclxSn.eq.2) then
+          phi(xsize(1),:,:,:) = temp_l - deltaT
+       endif
+       if (nclyS1.eq.2.and.xstart(2).eq.1) then
+          do i = 1, xsize(1)
+             phi(i,1,:,:) = temp_l - deltaT * (i-1) / real(xsize(1)-1, kind=mytype)
+          enddo
+       endif
+       if (nclySn.eq.2.and.xend(2).eq.ny) then
+          do i = 1, xsize(1)
+             phi(i,xsize(2),:,:) = temp_l - deltaT * (i-1) / real(xsize(1)-1, kind=mytype)
+          enddo
+       endif
+    endif
 
   end subroutine boundary_conditions_user
 
@@ -99,8 +109,66 @@ contains
 
     implicit none
 
+    ! Arguments
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+
+    ! Local variables
+    real(mytype), dimension(3) :: phiavg, phivar
+    integer :: ivar, i, j, k, ierror
+
+    ! Nothing to do if no scalar
+    if (numscalar.le.0) return
+
+    ! Init
+    phiavg = zero
+    phivar = zero
+
+    ! Monitor the space-averaged and RMS of velocity and temperature
+    ! First, compute the local sum
+    ivar = 1
+    do k=1,xsize(3)
+       do j = 1, xsize(2)
+          do i = 1, xsize(1)
+             phiavg(ivar) = phiavg(ivar) + ux1(i,j,k)
+             phivar(ivar) = phivar(ivar) + ux1(i,j,k)**2
+          enddo
+       enddo
+    enddo
+    ivar = ivar + 1
+    do k=1,xsize(3)
+       do j = 1, xsize(2)
+          do i = 1, xsize(1)
+             phiavg(ivar) = phiavg(ivar) + uy1(i,j,k)
+             phivar(ivar) = phivar(ivar) + uy1(i,j,k)**2
+          enddo
+       enddo
+    enddo
+    ivar = ivar + 1
+    do k=1,xsize(3)
+       do j = 1, xsize(2)
+          do i = 1, xsize(1)
+             phiavg(ivar) = phiavg(ivar) + phi1(i,j,k,1)
+             phivar(ivar) = phivar(ivar) + phi1(i,j,k,1)**2
+          enddo
+       enddo
+    enddo
+    ! Parallel sum if needed
+    if (nproc>1) then
+       call MPI_ALLREDUCE(MPI_IN_PLACE, &
+                          (/phiavg,phivar/), &
+                          6, &
+                          real_type, &
+                          MPI_SUM, &
+                          MPI_COMM_WORLD, &
+                          ierror)
+       if (ierror/=0) call decomp_2d_abort(ierror, "MPI_REDUCE in postprocess_user")
+    endif
+    ! Rescale
+    phiavg = phiavg / real(nx*ny, kind=mytype)
+    phivar = phivar / real(nx*ny, kind=mytype)
+    ! Rank 0 save the values in the file
+    if (io_bulk/=output_unit) write(io_bulk,*) phiavg, phivar-phiavg**2
 
   end subroutine postprocess_user
 
@@ -113,14 +181,9 @@ contains
   !############################################################################
   subroutine visu_user(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
-    use var, only : ux2, uy2, uz2, ux3, uy3, uz3
-    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-    use var, ONLY : nxmsize, nymsize, nzmsize
-    use visu, only : write_field
-
     implicit none
 
+    ! Arguments
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -128,5 +191,16 @@ contains
     character(len=32), intent(in) :: num
 
   end subroutine visu_user
+
+  ! Register fields
+  subroutine visu_user_init(visu_initialised)
+
+    implicit none
+
+    logical, intent(out) :: visu_initialised
+
+    visu_initialised = .true.
+
+  end subroutine visu_user_init
 
 end module user_sim
