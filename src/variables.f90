@@ -289,10 +289,23 @@ contains
     allocate (vwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
     vwmean=zero
 
+    allocate (u3mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    u3mean=zero
+    allocate (v3mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    v3mean=zero
+    allocate (u4mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    u4mean=zero
+    allocate (v4mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    v4mean=zero
+
     allocate (phimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
     phimean=zero
     allocate (phiphimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
     phiphimean=zero
+    allocate (phi3mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    phi3mean=zero
+    allocate (phi4mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    phi4mean=zero
 
     allocate (tmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
     tmean=zero
