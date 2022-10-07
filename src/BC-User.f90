@@ -441,7 +441,7 @@ contains
          ! Each rank print stuff to a dedicated IO unit
          do j = 1, xsize(2)
             do i = 1, xsize(1)
-               write(filename, "('histogram_',I3.3,'_',I3.3,'.txt')") i, j+xstart(2)-1
+               write(filename, "('out/histogram_',I3.3,'_',I3.3,'.txt')") i, j+xstart(2)-1
                open (newunit=io_unit, file=trim(filename))
                write (io_unit, *) ""
                write (io_unit, *) "u"
