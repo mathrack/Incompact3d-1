@@ -6,7 +6,7 @@ module hist
 
    implicit none
 
-   integer, parameter :: nsamp = 1
+   integer, parameter :: nsamp = 100
 
    ! Object with the histogram
    type :: hist_type
