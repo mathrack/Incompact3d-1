@@ -29,7 +29,7 @@ module case
   logical :: case_visu_init = .false.
   
   private ! All functions/subroutines private by default
-  public :: init, boundary_conditions, &
+  public :: init, fin, boundary_conditions, &
             momentum_forcing, scalar_forcing, set_fluid_properties, &
             test_flow, preprocessing, postprocessing, visu_case, visu_case_init
 
@@ -139,6 +139,13 @@ contains
 
   end subroutine init
   !##################################################################
+  subroutine fin ()
+
+    implicit none
+
+    if (itype.eq.itype_user) call fin_user()
+
+  end subroutine fin
   !##################################################################
   subroutine boundary_conditions (rho,ux,uy,uz,phi,ep)
 

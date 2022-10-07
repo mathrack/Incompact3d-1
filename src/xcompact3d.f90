@@ -276,11 +276,14 @@ subroutine finalise_xcompact3d()
   use probes, only : finalize_probes
   use visu, only : visu_finalise
   use les, only: finalise_explicit_les
+  use case, only : fin
 
   implicit none
 
   integer :: ierr
   
+  call fin()
+
   if (itype==2) then
      if(nrank.eq.0)then
         close(42)
