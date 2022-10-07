@@ -17,6 +17,7 @@ module user_sim
    IMPLICIT NONE
 
    ! Flags to control monitoring
+   logical, save :: init_not_done = .true.
    logical, parameter :: monitor_bulk = .true.
    logical, parameter :: monitor_minmax = .true.
    logical, parameter :: use_hist = .false.
@@ -61,23 +62,31 @@ contains
       ! Local variables
       integer :: i, j
 
+      ! Do not initialize twice
+      init_not_done = .false.
+
       ! Open IO unit for bulk quantities on master rank
       if (monitor_bulk .and. nrank == 0) then
          open (newunit=io_bulk, file=bulk_file, form='formatted')
          write (io_bulk, *) "u      v       T       u'²     v'²     T'²"
       end if
 
-      ! Velocity is zero
-      ux1 = zero
-      uy1 = zero
-      uz1 = zero
+      ! This does not apply in case of restart
+      if (irestart==0) then
 
-      ! Linear temperature profile
-      if (numscalar >= 1) then
-         do i = 1, xsize(1)
-            phi1(i, :, :, :) = temp_l - deltaT*(i - 1)/real(xsize(1) - 1, kind=mytype)
-         end do
-      end if
+         ! Velocity is zero
+         ux1 = zero
+         uy1 = zero
+         uz1 = zero
+
+         ! Linear temperature profile
+         if (numscalar >= 1) then
+            do i = 1, xsize(1)
+               phi1(i, :, :, :) = temp_l - deltaT*(i - 1)/real(xsize(1) - 1, kind=mytype)
+            end do
+         end if
+
+      endif
 
       ! Monitor minmax
       if (monitor_minmax) then
@@ -228,6 +237,9 @@ contains
       ! Nothing to do if no scalar
       if (numscalar <= 0) return
 
+      ! If first time step and restart
+      if (init_not_done) call init_user(ux1, uy1, uz1, ep1, phi1)
+
       ! Monitor bulk quantities
       if (monitor_bulk) then
 
@@ -290,7 +302,7 @@ contains
          ! u, v, T
          call update_minmax(mnmx_u, ux1)
          call update_minmax(mnmx_v, uy1)
-         call update_minmax(mnmx_t, phi1)
+         call update_minmax(mnmx_t, phi1(:,:,:,1))
 
          ! x-derivative
          call derx(ta1, ux1, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0, ubcx)
