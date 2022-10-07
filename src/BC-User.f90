@@ -19,7 +19,7 @@ module user_sim
    ! Flags to control monitoring
    logical, save :: init_not_done = .true.
    logical, parameter :: monitor_bulk = .true.
-   logical, parameter :: monitor_minmax = .false.
+   logical, parameter :: monitor_minmax = .true.
    logical, parameter :: use_hist = .true.
 
    ! Temperature on the left wall
@@ -99,6 +99,26 @@ contains
          allocate (mnmx_udy(xsize(1), xsize(2), xsize(3), 2))
          allocate (mnmx_vdy(xsize(1), xsize(2), xsize(3), 2))
          allocate (mnmx_tdy(xsize(1), xsize(2), xsize(3), 2))
+         if (use_hist) then
+            call decomp_2d_read_one(1, mnmx_u(:, :, :, 1), ".", "min_u", "min_u", decomp_main)
+            call decomp_2d_read_one(1, mnmx_u(:, :, :, 2), ".", "max_u", "max_u", decomp_main)
+            call decomp_2d_read_one(1, mnmx_v(:, :, :, 1), ".", "min_v", "min_v", decomp_main)
+            call decomp_2d_read_one(1, mnmx_v(:, :, :, 2), ".", "max_v", "max_v", decomp_main)
+            call decomp_2d_read_one(1, mnmx_t(:, :, :, 1), ".", "min_t", "min_t", decomp_main)
+            call decomp_2d_read_one(1, mnmx_t(:, :, :, 2), ".", "max_t", "max_t", decomp_main)
+            call decomp_2d_read_one(1, mnmx_udx(:, :, :, 1), ".", "min_udx", "min_udx", decomp_main)
+            call decomp_2d_read_one(1, mnmx_udx(:, :, :, 2), ".", "max_udx", "max_udx", decomp_main)
+            call decomp_2d_read_one(1, mnmx_vdx(:, :, :, 1), ".", "min_vdx", "min_vdx", decomp_main)
+            call decomp_2d_read_one(1, mnmx_vdx(:, :, :, 2), ".", "max_vdx", "max_vdx", decomp_main)
+            call decomp_2d_read_one(1, mnmx_tdx(:, :, :, 1), ".", "min_tdx", "min_tdx", decomp_main)
+            call decomp_2d_read_one(1, mnmx_tdx(:, :, :, 2), ".", "max_tdx", "max_tdx", decomp_main)
+            call decomp_2d_read_one(1, mnmx_udy(:, :, :, 1), ".", "min_udy", "min_udy", decomp_main)
+            call decomp_2d_read_one(1, mnmx_udy(:, :, :, 2), ".", "max_udy", "max_udy", decomp_main)
+            call decomp_2d_read_one(1, mnmx_vdy(:, :, :, 1), ".", "min_vdy", "min_vdy", decomp_main)
+            call decomp_2d_read_one(1, mnmx_vdy(:, :, :, 2), ".", "max_vdy", "max_vdy", decomp_main)
+            call decomp_2d_read_one(1, mnmx_tdy(:, :, :, 1), ".", "min_tdy", "min_tdy", decomp_main)
+            call decomp_2d_read_one(1, mnmx_tdy(:, :, :, 2), ".", "max_tdy", "max_tdy", decomp_main)
+         endif
       end if
 
       ! Add histogram everywhere for u, v, T and the space derivative
@@ -515,7 +535,7 @@ contains
       ! Local variables
       integer :: i, j, k
 
-      if (itime == ifirst) then
+      if (itime == ifirst .and. (.not.use_hist)) then
          do k = 1, xsize(3)
          do j = 1, xsize(2)
          do i = 1, xsize(1)
