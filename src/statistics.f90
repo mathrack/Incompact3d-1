@@ -99,7 +99,7 @@ contains
     uwmean = zero
     vwmean = zero
     u3mean = zero
-    v4mean = zero
+    v3mean = zero
     u4mean = zero
     v4mean = zero
     if (iscalar==1) then
