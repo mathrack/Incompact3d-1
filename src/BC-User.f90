@@ -19,8 +19,8 @@ module user_sim
    ! Flags to control monitoring
    logical, save :: init_not_done = .true.
    logical, parameter :: monitor_bulk = .true.
-   logical, parameter :: monitor_minmax = .true.
-   logical, parameter :: use_hist = .false.
+   logical, parameter :: monitor_minmax = .false.
+   logical, parameter :: use_hist = .true.
 
    ! Temperature on the left wall
    real(mytype), parameter :: temp_l = 0.5_mytype
@@ -327,10 +327,38 @@ contains
          call update_minmax(mnmx_tdy, ta1)
 
       end if
-      ! FIXME
 
       ! Histogram
-      ! FIXME
+      if (use_hist) then
+
+         ! u, v, T
+         call hst_update(hst_u, ux1)
+         call hst_update(hst_v, uy1)
+         call hst_update(hst_t, phi1(:,:,:,1))
+
+         ! x-derivative
+         call derx(ta1, ux1, di1, sx, ffx, fsx, fwx, xsize(1), xsize(2), xsize(3), 0, ubcx)
+         call hst_update(hst_udx, ta1)
+         call derx(ta1, uy1, di1, sx, ffxp, fsxp, fwxp, xsize(1), xsize(2), xsize(3), 1, ubcy)
+         call hst_update(hst_vdx, ta1)
+         call derxS(ta1, phi1(:, :, :, 1), di1, sx, ffxpS, fsxpS, fwxpS, xsize(1), xsize(2), xsize(3), 1, zero)
+         call hst_update(hst_tdx, ta1)
+
+         ! y-derivative
+         call transpose_x_to_y(ux1, ux2, decomp_main)
+         call dery(ta2, ux2, di2, sy, ffyp, fsyp, fwyp, ppy, ysize(1), ysize(2), ysize(3), 1, ubcx)
+         call transpose_y_to_x(ta2, ta1, decomp_main)
+         call hst_update(hst_udy, ta1)
+         call transpose_x_to_y(uy1, uy2, decomp_main)
+         call dery(ta2, uy2, di2, sy, ffy, fsy, fwy, ppy, ysize(1), ysize(2), ysize(3), 0, ubcy)
+         call transpose_y_to_x(ta2, ta1, decomp_main)
+         call hst_update(hst_vdy, ta1)
+         call transpose_x_to_y(phi1(:, :, :, 1), phi2(:, :, :, 1), decomp_main)
+         call deryS(ta2, phi2(:, :, :, 1), di2, sy, ffypS, fsypS, fwypS, ppy, ysize(1), ysize(2), ysize(3), 1, zero)
+         call transpose_y_to_x(ta2, ta1, decomp_main)
+         call hst_update(hst_tdy, ta1)
+
+      endif
 
    end subroutine postprocess_user
 
@@ -371,6 +399,7 @@ contains
       implicit none
 
       integer :: i, j, io_unit
+      character(len=30) :: filename
 
       if (monitor_bulk .and. nrank == 0) close (io_bulk)
 
@@ -410,23 +439,40 @@ contains
 
       if (use_hist) then
          ! Each rank print stuff to a dedicated IO unit
-         open (newunit=io_unit, file="FIXME") ! FIXME
          do j = 1, xsize(2)
             do i = 1, xsize(1)
+               write(filename, "('histogram_',I3.3,'_',I3.3,'.txt')") i, j+xstart(2)-1
+               open (newunit=io_unit, file=trim(filename))
                write (io_unit, *) ""
-               write (io_unit, *) "Histogram at i, j =", i + xstart(1) - 1, ", ", j + xstart(2) - 1
+               write (io_unit, *) "u"
                call hst_u(i, j)%print(io_unit)
+               write (io_unit, *) ""
+               write (io_unit, *) "v"
                call hst_v(i, j)%print(io_unit)
+               write (io_unit, *) ""
+               write (io_unit, *) "t"
                call hst_t(i, j)%print(io_unit)
+               write (io_unit, *) ""
+               write (io_unit, *) "udx"
                call hst_udx(i, j)%print(io_unit)
+               write (io_unit, *) ""
+               write (io_unit, *) "vdx"
                call hst_vdx(i, j)%print(io_unit)
+               write (io_unit, *) ""
+               write (io_unit, *) "tdx"
                call hst_tdx(i, j)%print(io_unit)
+               write (io_unit, *) ""
+               write (io_unit, *) "udy"
                call hst_udy(i, j)%print(io_unit)
+               write (io_unit, *) ""
+               write (io_unit, *) "vdy"
                call hst_vdy(i, j)%print(io_unit)
+               write (io_unit, *) ""
+               write (io_unit, *) "tdy"
                call hst_tdy(i, j)%print(io_unit)
+               close (io_unit)
             end do
          end do
-         close (io_unit)
 
          ! Release memory
          do j = 1, xsize(2)
@@ -491,5 +537,24 @@ contains
       end do
 
    end subroutine update_minmax
+
+   subroutine hst_update(hst, var)
+
+      implicit none
+
+      ! Arguments
+      type(hist_type), dimension(xsize(1), xsize(2)), intent(inout) :: hst
+      real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: var
+
+      ! Local variables
+      integer :: i, j
+
+      do j = 1, xsize(2)
+         do i = 1, xsize(1)
+            call hst(i,j)%update(var(i,j,1))
+         enddo
+      enddo
+
+   end subroutine hst_update
 
 end module user_sim
