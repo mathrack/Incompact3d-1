@@ -461,34 +461,16 @@ contains
          ! Each rank print stuff to a dedicated IO unit
          do j = 1, xsize(2)
             do i = 1, xsize(1)
-               write(filename, "('out/histogram_',I3.3,'_',I3.3,'.txt')") i, j+xstart(2)-1
-               open (newunit=io_unit, file=trim(filename))
-               write (io_unit, *) ""
-               write (io_unit, *) "u"
+               write(filename, "('out/histogram_',I3.3,'_',I3.3,'.bin')") i, j+xstart(2)-1
+               open (newunit=io_unit, file=trim(filename), form='unformatted')
                call hst_u(i, j)%print(io_unit)
-               write (io_unit, *) ""
-               write (io_unit, *) "v"
                call hst_v(i, j)%print(io_unit)
-               write (io_unit, *) ""
-               write (io_unit, *) "t"
                call hst_t(i, j)%print(io_unit)
-               write (io_unit, *) ""
-               write (io_unit, *) "udx"
                call hst_udx(i, j)%print(io_unit)
-               write (io_unit, *) ""
-               write (io_unit, *) "vdx"
                call hst_vdx(i, j)%print(io_unit)
-               write (io_unit, *) ""
-               write (io_unit, *) "tdx"
                call hst_tdx(i, j)%print(io_unit)
-               write (io_unit, *) ""
-               write (io_unit, *) "udy"
                call hst_udy(i, j)%print(io_unit)
-               write (io_unit, *) ""
-               write (io_unit, *) "vdy"
                call hst_vdy(i, j)%print(io_unit)
-               write (io_unit, *) ""
-               write (io_unit, *) "tdy"
                call hst_tdy(i, j)%print(io_unit)
                close (io_unit)
             end do

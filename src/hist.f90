@@ -146,21 +146,43 @@ contains
       end if
 
       ! Output each size bin
-      if (obj%num(1) == 0) then
-         write (io_unit, *) "No sample below min"
+      !
+      ! Text output if stdout
+      !
+      ! Binary output otherwise
+      !
+      if (present(io_unit)) then
+         write (io_unit) size(obj%num)
+         if (obj%num(1) == 0) then
+            write (io_unit) obj%hist_min, obj%hist_min, obj%num(1), obj%hist_minavg
+         else
+            write (io_unit) obj%hist_minval, obj%hist_min, obj%num(1), obj%hist_minavg
+         end if
+         do ibin = 2, size(obj%num) - 1
+            write (io_unit) obj%hist_min + (ibin - 2)*obj%step, obj%hist_min + (ibin - 1)*obj%step, obj%num(ibin)
+         end do
+         if (obj%num(size(obj%num)) == 0) then
+            write (io_unit, *) obj%hist_max, obj%hist_max, obj%num(size(obj%num)), obj%hist_maxavg
+         else
+            write (io_unit, *) obj%hist_max, obj%hist_maxval, obj%num(size(obj%num)), obj%hist_maxavg
+         end if
       else
-         write (io_unit, *) "Bin ]", obj%hist_minval, ", ", obj%hist_min, "] ", &
-            obj%num(1), obj%hist_minavg
-      end if
-      do ibin = 2, size(obj%num) - 1
-         write (io_unit, *) "Bin ]", obj%hist_min + (ibin - 2)*obj%step, ", ", &
-            obj%hist_min + (ibin - 1)*obj%step, "] ", obj%num(ibin)
-      end do
-      if (obj%num(size(obj%num)) == 0) then
-         write (io_unit, *) "No sample above max"
-      else
-         write (io_unit, *) "Bin ]", obj%hist_max, ", ", obj%hist_maxval, "[ ", &
-            obj%num(size(obj%num)), obj%hist_maxavg
+         if (obj%num(1) == 0) then
+            write (io_unit, *) "No sample below min"
+         else
+            write (io_unit, *) "Bin ]", obj%hist_minval, ", ", obj%hist_min, "] ", &
+               obj%num(1), obj%hist_minavg
+         end if
+         do ibin = 2, size(obj%num) - 1
+            write (io_unit, *) "Bin ]", obj%hist_min + (ibin - 2)*obj%step, ", ", &
+               obj%hist_min + (ibin - 1)*obj%step, "] ", obj%num(ibin)
+         end do
+         if (obj%num(size(obj%num)) == 0) then
+            write (io_unit, *) "No sample above max"
+         else
+            write (io_unit, *) "Bin ]", obj%hist_max, ", ", obj%hist_maxval, "[ ", &
+               obj%num(size(obj%num)), obj%hist_maxavg
+         end if
       end if
 
    end subroutine hist_type_print
