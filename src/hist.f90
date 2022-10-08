@@ -151,7 +151,7 @@ contains
       !
       ! Binary output otherwise
       !
-      if (present(io_unit)) then
+      if (present(given_io_unit)) then
          write (io_unit) size(obj%num)
          if (obj%num(1) == 0) then
             write (io_unit) obj%hist_min, obj%hist_min, obj%num(1), obj%hist_minavg
