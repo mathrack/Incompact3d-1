@@ -52,14 +52,32 @@ contains
        call decomp_2d_register_variable(io_statistics, "u4mean", 1, 1, 0, mytype)                    
        call decomp_2d_register_variable(io_statistics, "v4mean", 1, 1, 0, mytype)
 
+       call decomp_2d_register_variable(io_statistics, "dudxmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "dudymean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "dudx2mean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "dudy2mean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "dvdxmean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "dvdymean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "dvdx2mean", 1, 1, 0, mytype)
+       call decomp_2d_register_variable(io_statistics, "dvdy2mean", 1, 1, 0, mytype)
+
        do is=1, numscalar
-          write(varname,"('phi',I2.2)") is
+          write(varname,"('phi',I2.2,'mean')") is
           call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
-          write(varname,"('phiphi',I2.2)") is
+          write(varname,"('phiphi',I2.2,'mean')") is
           call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
-          write(varname,"('phi3',I2.2)") is
+          write(varname,"('phi3',I2.2,'mean')") is
           call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
-          write(varname,"('phi4',I2.2)") is
+          write(varname,"('phi4',I2.2,'mean')") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+
+          write(varname,"('dphi',I2.2,'dxmean')") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+          write(varname,"('dphi',I2.2,'dymean')") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+          write(varname,"('dphi',I2.2,'dx2mean')") is
+          call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
+          write(varname,"('dphi',I2.2,'dy2mean')") is
           call decomp_2d_register_variable(io_statistics, varname, 1, 1, 0, mytype)
        enddo
 
@@ -84,6 +102,9 @@ contains
     use var, only : phimean, phiphimean
     use var, only : u3mean, v3mean, u4mean, v4mean
     use var, only : phi3mean, phi4mean
+    use var, only : dudxmean, dudymean, dudx2mean, dudy2mean, &
+                    dvdxmean, dvdymean, dvdx2mean, dvdy2mean, &
+                    dphidxmean, dphidymean, dphidx2mean, dphidy2mean
 
     implicit none
 
@@ -102,11 +123,23 @@ contains
     v3mean = zero
     u4mean = zero
     v4mean = zero
+    dudxmean = zero
+    dudymean = zero
+    dudx2mean = zero
+    dudy2mean = zero
+    dvdxmean = zero
+    dvdymean = zero
+    dvdx2mean = zero
+    dvdy2mean = zero
     if (iscalar==1) then
       phimean = zero
       phiphimean = zero
       phi3mean = zero
       phi4mean = zero
+      dphidxmean = zero
+      dphidymean = zero
+      dphidx2mean = zero
+      dphidy2mean = zero
     endif
 
     call init_statistic_adios2
@@ -176,6 +209,9 @@ contains
     use var, only : phimean, phiphimean
     use var, only : u3mean, v3mean, u4mean, v4mean
     use var, only : phi3mean, phi4mean
+    use var, only : dudxmean, dudymean, dudx2mean, dudy2mean, &
+                    dvdxmean, dvdymean, dvdx2mean, dvdy2mean, &
+                    dphidxmean, dphidymean, dphidx2mean, dphidy2mean
 
     implicit none
 
@@ -234,16 +270,33 @@ contains
     call read_or_write_one_stat(flag_read, gen_statname("u4mean"), u4mean)
     call read_or_write_one_stat(flag_read, gen_statname("v4mean"), v4mean)
 
+    call read_or_write_one_stat(flag_read, gen_statname("dudxmean"), dudxmean)
+    call read_or_write_one_stat(flag_read, gen_statname("dudymean"), dudymean)
+    call read_or_write_one_stat(flag_read, gen_statname("dudx2mean"), dudx2mean)
+    call read_or_write_one_stat(flag_read, gen_statname("dudy2mean"), dudy2mean)
+    call read_or_write_one_stat(flag_read, gen_statname("dvdxmean"), dvdxmean)
+    call read_or_write_one_stat(flag_read, gen_statname("dvdymean"), dvdymean)
+    call read_or_write_one_stat(flag_read, gen_statname("dvdx2mean"), dvdx2mean)
+    call read_or_write_one_stat(flag_read, gen_statname("dvdy2mean"), dvdy2mean)
+
     if (iscalar==1) then
        do is=1, numscalar
-          write(filename,"('phi',I2.2)") is
+          write(filename,"('phi',I2.2,'mean')") is
           call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phimean(:,:,:,is))
-          write(filename,"('phiphi',I2.2)") is
+          write(filename,"('phiphi',I2.2,'mean')") is
           call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phiphimean(:,:,:,is))
-          write(filename,"('phi3',I2.2)") is
+          write(filename,"('phi3',I2.2,'mean')") is
           call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phi3mean(:,:,:,is))
-          write(filename,"('phi4',I2.2)") is
+          write(filename,"('phi4',I2.2,'mean')") is
           call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), phi4mean(:,:,:,is))
+          write(filename,"('dphi',I2.2,'dxmean')") is
+          call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), dphidxmean(:,:,:,is))
+          write(filename,"('dphi',I2.2,'dymean')") is
+          call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), dphidymean(:,:,:,is))
+          write(filename,"('dphi',I2.2,'dx2mean')") is
+          call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), dphidx2mean(:,:,:,is)) 
+          write(filename,"('dphi',I2.2,'dy2mean')") is
+          call read_or_write_one_stat(flag_read, gen_statname(trim(filename)), dphidy2mean(:,:,:,is))
        enddo
     endif
 
@@ -294,6 +347,7 @@ contains
   subroutine overall_statistic(ux1,uy1,uz1,phi1,pp3,ep1)
 
     use param
+    use ibm_param, only : ubcx, ubcy, ubcz
     use variables
     use decomp_2d
     use decomp_2d_io
@@ -303,6 +357,7 @@ contains
     use var, only : ppi3, dip3
     use var, only : pp2, ppi2, dip2
     use var, only : pp1, ta1, di1
+    use var, only : ux2, uy2, phi2, ta2, di2
 
     use var, only : tmean
     use var, only : pmean
@@ -314,6 +369,9 @@ contains
     use var, only : phimean, phiphimean
     use var, only : u3mean, v3mean, u4mean, v4mean
     use var, only : phi3mean, phi4mean
+    use var, only : dudxmean, dudymean, dudx2mean, dudy2mean, &
+                    dvdxmean, dvdymean, dvdx2mean, dvdy2mean, &
+                    dphidxmean, dphidymean, dphidx2mean, dphidy2mean
 
     implicit none
 
@@ -364,6 +422,24 @@ contains
     call update_average_scalar(u4mean, ux1**4, ep1)
     call update_average_scalar(v4mean, uy1**4, ep1)
 
+    ! Derivative
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call update_average_scalar(dudxmean, ta1, ep1)
+    call update_average_scalar(dudx2mean, ta1**2, ep1)
+    call transpose_x_to_y(ux1, ux2)
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call transpose_y_to_x(ta2, ta1)
+    call update_average_scalar(dudymean, ta1, ep1)
+    call update_average_scalar(dudy2mean, ta1**2, ep1)
+    call derx (ta1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call update_average_scalar(dvdxmean, ta1, ep1)
+    call update_average_scalar(dvdx2mean, ta1**2, ep1)
+    call transpose_x_to_y(uy1, uy2)
+    call dery (ta2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call transpose_y_to_x(ta2, ta1)
+    call update_average_scalar(dvdymean, ta1, ep1)
+    call update_average_scalar(dvdy2mean, ta1**2, ep1)
+
     !! Scalar statistics
     if (iscalar==1) then
        do is=1, numscalar
@@ -376,6 +452,16 @@ contains
           ! Order 3 and 4
           call update_average_scalar(phi3mean(:,:,:,is), phi1(:,:,:,is)**3, ep1)
           call update_average_scalar(phi4mean(:,:,:,is), phi1(:,:,:,is)**4, ep1)
+
+          ! Derivative
+          call derxS (ta1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,zero)
+          call update_average_scalar(dphidxmean(:,:,:,is), ta1, ep1)
+          call update_average_scalar(dphidx2mean(:,:,:,is), ta1**2, ep1)
+          call transpose_x_to_y(phi1(:,:,:,is), phi2(:,:,:,is))
+          call deryS (ta2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+          call transpose_y_to_x(ta2, ta1)
+          call update_average_scalar(dphidymean(:,:,:,is), ta1, ep1)
+          call update_average_scalar(dphidy2mean(:,:,:,is), ta1**2, ep1)
        enddo
     endif
 

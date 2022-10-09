@@ -33,6 +33,10 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phimean,phiphimean,uphimean,vphimean,wphimean
   real(mytype), save, allocatable, dimension(:,:,:) :: u3mean, v3mean, u4mean, v4mean
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phi3mean, phi4mean
+  ! derivatiaves (2D)
+  real(mytype), save, allocatable, dimension(:,:,:) :: dudxmean, dudymean, dudx2mean, dudy2mean
+  real(mytype), save, allocatable, dimension(:,:,:) :: dvdxmean, dvdymean, dvdx2mean, dvdy2mean
+  real(mytype), save, allocatable, dimension(:,:,:,:) :: dphidxmean, dphidymean, dphidx2mean, dphidy2mean
 
   !arrays for visualization
   real(mytype), save, allocatable, dimension(:,:,:) :: uvisu
@@ -306,6 +310,33 @@ contains
     phi3mean=zero
     allocate (phi4mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
     phi4mean=zero
+
+    allocate(dudxmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    dudxmean = zero
+    allocate(dudymean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    dudymean = zero
+    allocate(dudx2mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    dudx2mean = zero
+    allocate(dudy2mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    dudy2mean = zero
+
+    allocate(dvdxmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    dvdxmean = zero
+    allocate(dvdymean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    dvdymean = zero
+    allocate(dvdx2mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    dvdx2mean = zero
+    allocate(dvdy2mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    dvdy2mean = zero
+
+    allocate(dphidxmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    dphidxmean = zero
+    allocate(dphidymean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    dphidymean = zero
+    allocate(dphidx2mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    dphidx2mean = zero
+    allocate(dphidy2mean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    dphidy2mean = zero
 
     allocate (tmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
     tmean=zero
