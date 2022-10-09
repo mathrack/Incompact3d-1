@@ -162,9 +162,9 @@ contains
             write (io_unit) obj%hist_min + (ibin - 2)*obj%step, obj%hist_min + (ibin - 1)*obj%step, obj%num(ibin)
          end do
          if (obj%num(size(obj%num)) == 0) then
-            write (io_unit, *) obj%hist_max, obj%hist_max, obj%num(size(obj%num)), obj%hist_maxavg
+            write (io_unit) obj%hist_max, obj%hist_max, obj%num(size(obj%num)), obj%hist_maxavg
          else
-            write (io_unit, *) obj%hist_max, obj%hist_maxval, obj%num(size(obj%num)), obj%hist_maxavg
+            write (io_unit) obj%hist_max, obj%hist_maxval, obj%num(size(obj%num)), obj%hist_maxavg
          end if
       else
          if (obj%num(1) == 0) then
