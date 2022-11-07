@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 # Subroutine to extract / plot the histogram of a variable
-def extract_and_plot(f, name):
+def extract_and_plot(f, name, prec):
     # Matplotlib figure and axis
     if (plot):
         fig, ax = plt.subplots()
@@ -17,10 +17,10 @@ def extract_and_plot(f, name):
     #
     # First bin
     tmp = f.read(4)
-    xmin = np.fromfile(f, dtype=np.float32, count=1)
-    xmax = np.fromfile(f, dtype=np.float32, count=1)
+    xmin = np.fromfile(f, dtype=prec, count=1)
+    xmax = np.fromfile(f, dtype=prec, count=1)
     xnumr = np.fromfile(f, dtype=np.int32, count=1)
-    np.fromfile(f, dtype=np.float32, count=1)
+    np.fromfile(f, dtype=prec, count=1)
     tmp = f.read(4)
     if (plot):
         xmin = xmin[0]
@@ -35,8 +35,8 @@ def extract_and_plot(f, name):
     # Read the size bins
     for ibin in range(n[0]-2):
         tmp = f.read(4)
-        xmin = np.fromfile(f, dtype=np.float32, count=1)
-        xmax = np.fromfile(f, dtype=np.float32, count=1)
+        xmin = np.fromfile(f, dtype=prec, count=1)
+        xmax = np.fromfile(f, dtype=prec, count=1)
         xnum = np.fromfile(f, dtype=np.int32, count=1)
         tmp = f.read(4)
         if (plot):
@@ -52,10 +52,10 @@ def extract_and_plot(f, name):
     #
     # Last bin
     tmp = f.read(4)
-    xmin = np.fromfile(f, dtype=np.float32, count=1)
-    xmax = np.fromfile(f, dtype=np.float32, count=1)
+    xmin = np.fromfile(f, dtype=prec, count=1)
+    xmax = np.fromfile(f, dtype=prec, count=1)
     xnum = np.fromfile(f, dtype=np.int32, count=1)
-    np.fromfile(f, dtype=np.float32, count=1)
+    np.fromfile(f, dtype=prec, count=1)
     tmp = f.read(4)
     if (plot):
         xmin = xmin[0]
@@ -76,28 +76,48 @@ def extract_and_plot(f, name):
         tmp = ax.set_ylabel("Number of samples")
         tmp = ax.set_yscale("log")
         tmp = ax.set_title("Histogram for "+name)
-        tmp = plt.show()
+        tmp = fig.show()
 
 # Flag to activate the plot
 plot = True
 
 # Name of the file to process
-fname = "out/histogram_100_120.bin"
+fname = "out/dp_histogram_100_100.bin"
 
 # Open the file
-f = open(fname, "rb")
+fdp = open(fname, "rb")
 
-extract_and_plot(f, "u")
-extract_and_plot(f, "v")
-extract_and_plot(f, "t")
+# Name of the file to process
+fname = "out/sp_histogram_100_100.bin"
 
-extract_and_plot(f, "dudx")
-extract_and_plot(f, "dvdx")
-extract_and_plot(f, "dtdx")
+# Open the file
+fsp = open(fname, "rb")
 
-extract_and_plot(f, "dudy")
-extract_and_plot(f, "dvdy")
-extract_and_plot(f, "dtdy")
+extract_and_plot(fsp, "u (SP)", np.float32)
+extract_and_plot(fdp, "u (DP)", np.float64)
+extract_and_plot(fsp, "v (SP)", np.float32)
+extract_and_plot(fdp, "v (DP)", np.float64)
+extract_and_plot(fsp, "t (SP)", np.float32)
+extract_and_plot(fdp, "t (DP)", np.float64)
+
+input("Input for x-derivative")
+
+extract_and_plot(fsp, "dudx (SP)", np.float32)
+extract_and_plot(fdp, "dudx (DP)", np.float64)
+extract_and_plot(fsp, "dvdx (SP)", np.float32)
+extract_and_plot(fdp, "dvdx (DP)", np.float64)
+extract_and_plot(fsp, "dtdx (SP)", np.float32)
+extract_and_plot(fdp, "dtdx (DP)", np.float64)
+
+input("Input for y-derivative")
+
+extract_and_plot(fsp, "dudy (SP)", np.float32)
+extract_and_plot(fdp, "dudy (DP)", np.float64)
+extract_and_plot(fsp, "dvdy (SP)", np.float32)
+extract_and_plot(fdp, "dvdy (DP)", np.float64)
+extract_and_plot(fsp, "dtdy (SP)", np.float32)
+extract_and_plot(fdp, "dtdy (DP)", np.float64)
 
 # Close the file
-f.close()
+fsp.close()
+fdp.close()
