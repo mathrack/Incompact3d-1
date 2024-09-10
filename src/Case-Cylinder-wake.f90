@@ -24,56 +24,48 @@ contains
 
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
-    use param, only : one, two, ten
-    use ibm_param
+    use ibm_param, only : cex, cey, ubcx, ubcy, ra
 
     implicit none
 
-    integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-    real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-    real(mytype),dimension(ny) :: yp
-    real(mytype)               :: dx
-    real(mytype)               :: remp
-    integer                    :: i,j,k
-    real(mytype)               :: xm,ym,r,rads2,kcon
-    real(mytype)               :: zeromach
-    real(mytype)               :: cexx,ceyy,dist_axi
+    ! Arguments
+    integer,intent(in)                                            :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+    real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf),intent(inout) :: epsi
+    real(mytype),intent(in)                                       :: dx
+    real(mytype),dimension(ny),intent(in)                         :: yp
+    real(mytype),intent(in)                                       :: remp
 
-    zeromach=one
-    do while ((one + zeromach / two) .gt. one)
-       zeromach = zeromach/two
-    end do
-    zeromach = ten*zeromach
+    ! Local variables
+    integer                    :: i,j
+    real(mytype)               :: xm,ym,r2x,r2y,ylim,r2lim
+    real(mytype)               :: cexx,ceyy
 
     ! Intitialise epsi
-    epsi(:,:,:)=zero
+    epsi(:,:,:) = 0._mytype
 
     ! Update center of moving Cylinder
-    !cexx=cex+ubcx*t
-    !ceyy=cey+ubcy*t
-    ! Update center of moving Cylinder
-    if (t.ne.0.) then
-       cexx=cex+ubcx*(t-ifirst*dt)
-       ceyy=cey+ubcy*(t-ifirst*dt)
-    else
-       cexx=cex
-       ceyy=cey
-    endif
-    !
+    cexx = cex
+    ceyy = cey
+    if (t > 0._mytype) then
+       cexx = cexx + ubcx*(t-ifirst*dt)
+       ceyy = ceyy + ubcy*(t-ifirst*dt)
+    end if
+
     ! Define adjusted smoothing constant
-!    kcon = log((one-0.0001)/0.0001)/(smoopar*0.5*dx) ! 0.0001 is the y-value, smoopar: desired number of affected points 
-!
-    do k=nzi,nzf
-       do j=nyi,nyf
-          ym=yp(j)
-          do i=nxi,nxf
-             xm=real(i-1,mytype)*dx
-             r=sqrt((xm-cexx)**two+(ym-ceyy)**two)
-             if (r-ra.gt.zeromach) then
-                cycle
-             endif
-             epsi(i,j,k)=remp
-          enddo
+    !kcon = log((one-0.0001)/0.0001)/(smoopar*0.5*dx) ! 0.0001 is the y-value, smoopar: desired number of affected points 
+
+    ! Update epsi inside the cylinder (r <= ra + 10 * machine precision)
+    ylim = ra + 10*epsilon(ra)
+    r2lim = ylim**2
+    do j=nyi,nyf
+       ym=yp(j)
+       if (abs(ym-ceyy) > ylim) cycle
+       r2y=(ym-ceyy)**2
+       do i=nxi,nxf
+          xm=real(i-1+nxi-1,mytype)*dx
+          r2x=(xm-cexx)**2
+          if (r2x > r2lim-r2y) cycle
+          epsi(i,j,nzi:nzf)=remp
        enddo
     enddo
 

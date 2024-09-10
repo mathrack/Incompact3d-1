@@ -521,7 +521,7 @@ subroutine cubsplx(u,lind)
               endif
               ! Special Case
               if (xi(i,j,k).eq.xf(i,j,k)) then
-                  u(ipol,j,k)=bcimp                                   
+                  u(i,j,k)=bcimp                                   
               else
               ! Cubic Spline Reconstruction
 		  na=ia
@@ -688,7 +688,7 @@ subroutine cubsply(u,lind)
               endif
               ! Special Case
               if (yi(j,i,k).eq.yf(j,i,k)) then
-                  u(i,jpol,k)=bcimp                                   
+                  u(i,j,k)=bcimp                                   
               else
 		  !calcul du polynôme
 		   na=ia
@@ -965,33 +965,34 @@ end subroutine cubic_spline
 !***************************************************************************
 !
 subroutine ana_y_cyl(i,y_pos,ana_res)
-  !
+
   USE param
   USE complex_geometry
   USE decomp_2d
   USE variables
   USE ibm_param
-  !
+
   implicit none
-  !
-  integer                                            :: i
-  real(mytype)                                       :: y_pos,ana_res 
+
+  integer, intent(in) :: i
+  real(mytype), intent(in) :: y_pos
+  real(mytype), intent(out) :: ana_res
+
   real(mytype)                                       :: cexx,ceyy
-  !
-  if (t.ne.0.) then
-     cexx = cex + ubcx*(t-ifirst*dt)
-     ceyy = cey + ubcy*(t-ifirst*dt)
-  else
-     cexx = cex
-     ceyy = cey
+
+  cexx = cex
+  ceyy = cey
+  if (t > 0._mytype) then
+     cexx = cexx + ubcx*(t-ifirst*dt)
+     ceyy = ceyy + ubcy*(t-ifirst*dt)
   endif
+
   if (y_pos.gt.ceyy) then     ! Impose analytical BC
       ana_res=ceyy + sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
   else
       ana_res=ceyy - sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
   endif     
-  !
-  return
+
 end subroutine ana_y_cyl
 !***************************************************************************
 !

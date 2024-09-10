@@ -58,11 +58,12 @@ contains
 
     IMPLICIT NONE
 
-    INTEGER :: nxi,nxf,ny,nyi,nyf,nzi,nzf
-    REAL(mytype),DIMENSION(nxi:nxf,nyi:nyf,nzi:nzf),intent(inout) :: epsi
-    REAL(mytype)               :: dx,dz
-    REAL(mytype),DIMENSION(ny) :: yp
-    REAL(mytype)               :: remp
+    ! Arguments
+    integer,intent(in)                                            :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+    real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf),intent(inout) :: epsi
+    real(mytype),intent(in)                                       :: dx
+    real(mytype),dimension(ny),intent(in)                         :: yp
+    real(mytype),intent(in)                                       :: dz, remp
 
     IF (itype.EQ.itype_cyl) THEN
 
