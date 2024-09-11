@@ -37,7 +37,7 @@ contains
 
     ! Local variables
     integer                    :: i,j
-    real(mytype)               :: xm,ym,r2x,r2y,ylim,r2lim
+    real(mytype)               :: xm,ym,r2x,r2y,rlim,r2lim
     real(mytype)               :: cexx,ceyy
 
     ! Intitialise epsi
@@ -54,22 +54,22 @@ contains
     ! Define adjusted smoothing constant
     !kcon = log((one-0.0001)/0.0001)/(smoopar*0.5*dx) ! 0.0001 is the y-value, smoopar: desired number of affected points 
 
-    ! Update epsi inside the cylinder (r <= ra + 10 * machine precision)
-    ylim = ra + 10*epsilon(ra)
-    r2lim = ylim**2
+    ! Update epsi inside the cylinder (r <= ra (1 + 10 * machine precision))
+    rlim = ra (1._mytype + 10*epsilon(ra))
+    r2lim = rlim**2
     do j=nyi,nyf
        ym=yp(j)
-       if (abs(ym-ceyy) > ylim) cycle
+       if (abs(ym-ceyy) > rlim) cycle
        r2y=(ym-ceyy)**2
        do i=nxi,nxf
           xm=real(i-1+nxi-1,mytype)*dx
+          if (abs(xm-cexx) > rlim) cycle
           r2x=(xm-cexx)**2
           if (r2x > r2lim-r2y) cycle
           epsi(i,j,nzi:nzf)=remp
        enddo
     enddo
 
-    return
   end subroutine geomcomplex_cyl
 
   !********************************************************************
