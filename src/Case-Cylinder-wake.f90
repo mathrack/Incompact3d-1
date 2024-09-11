@@ -55,7 +55,7 @@ contains
     !kcon = log((one-0.0001)/0.0001)/(smoopar*0.5*dx) ! 0.0001 is the y-value, smoopar: desired number of affected points 
 
     ! Update epsi inside the cylinder (r <= ra (1 + 10 * machine precision))
-    rlim = ra (1._mytype + 10*epsilon(ra))
+    rlim = ra * (1._mytype + 10*epsilon(ra))
     r2lim = rlim**2
     do j=nyi,nyf
        ym=yp(j)
