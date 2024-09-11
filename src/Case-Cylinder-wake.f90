@@ -25,6 +25,7 @@ contains
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
     use ibm_param, only : cex, cey, ubcx, ubcy, ra
+    use moving_cylinder, only : get_cyl_xpos, get_cyl_ypos ! Ajout CF moving cylinder
 
     implicit none
 
@@ -43,13 +44,11 @@ contains
     ! Intitialise epsi
     epsi(:,:,:) = 0._mytype
 
+    ! Ajout CF moving cylinder
     ! Update center of moving Cylinder
-    cexx = cex
-    ceyy = cey
-    if (t > 0._mytype) then
-       cexx = cexx + ubcx*(t-ifirst*dt)
-       ceyy = ceyy + ubcy*(t-ifirst*dt)
-    end if
+    ! WARNING: this is not compatible with RK time schemes
+    cexx = get_cyl_xpos(max(0._mytype, t-ifirst*dt))
+    ceyy = get_cyl_ypos(max(0._mytype, t-ifirst*dt))
 
     ! Define adjusted smoothing constant
     !kcon = log((one-0.0001)/0.0001)/(smoopar*0.5*dx) ! 0.0001 is the y-value, smoopar: desired number of affected points 
@@ -77,6 +76,8 @@ contains
 
     USE param
     USE variables
+    use ibm_param, only : ubcx, ubcy, cyl_oscil ! Ajout CF moving cylinder
+    use moving_cylinder, only : get_cyl_xvel, get_cyl_yvel ! Ajout CF moving cylinder
 
     implicit none
 
@@ -86,7 +87,14 @@ contains
     call inflow (phi)
     call outflow (ux,uy,uz,phi)
 
-    return
+    ! Ajout CF moving cylinder
+    ! Update ubcx and ubcy if needed
+    ! WARNING: this is not compatible with RK time schemes
+    if (cyl_oscil) then
+      ubcx = get_cyl_xvel(max(0._mytype, t-ifirst*dt))
+      ubcy = get_cyl_yvel(max(0._mytype, t-ifirst*dt))
+    end if
+
   end subroutine boundary_conditions_cyl
   !********************************************************************
   subroutine inflow (phi)

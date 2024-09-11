@@ -667,6 +667,10 @@ module ibm_param
   real(mytype) :: chord,thickness,omega
   integer :: inana ! Analytical BC as Input
   integer :: imove
+  ! Ajout CF moving cylinder
+  ! Parameters for oscillating cylinder
+  logical, save :: cyl_oscil
+  real(mytype), save :: cyl_period, cyl_amp
 end module ibm_param
 !############################################################################
 !############################################################################

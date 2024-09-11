@@ -971,6 +971,7 @@ subroutine ana_y_cyl(i,y_pos,ana_res)
   USE decomp_2d
   USE variables
   USE ibm_param
+  use moving_cylinder, only : get_cyl_xpos, get_cyl_ypos ! Ajout CF moving cylinder
 
   implicit none
 
@@ -978,14 +979,13 @@ subroutine ana_y_cyl(i,y_pos,ana_res)
   real(mytype), intent(in) :: y_pos
   real(mytype), intent(out) :: ana_res
 
-  real(mytype)                                       :: cexx,ceyy
+  real(mytype) :: cexx,ceyy
 
-  cexx = cex
-  ceyy = cey
-  if (t > 0._mytype) then
-     cexx = cexx + ubcx*(t-ifirst*dt)
-     ceyy = ceyy + ubcy*(t-ifirst*dt)
-  endif
+  ! Ajout CF moving cylinder
+  ! Update center of moving Cylinder
+  ! WARNING: this is not compatible with RK time schemes
+  cexx = get_cyl_xpos(max(0._mytype, t-ifirst*dt))
+  ceyy = get_cyl_ypos(max(0._mytype, t-ifirst*dt))
 
   if (y_pos.gt.ceyy) then     ! Impose analytical BC
       ana_res=ceyy + sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
@@ -997,33 +997,34 @@ end subroutine ana_y_cyl
 !***************************************************************************
 !
 subroutine ana_x_cyl(j,x_pos,ana_res)
-  !
+
   USE param
   USE complex_geometry
   USE decomp_2d
   USE variables
   USE ibm_param
-  !
+  use moving_cylinder, only : get_cyl_xpos, get_cyl_ypos ! Ajout CF moving cylinder
+
   implicit none
-  !
-  integer                                            :: j
-  real(mytype)                                       :: x_pos,ana_res 
-  real(mytype)                                       :: cexx,ceyy
-  !
-  if (t.ne.0.) then
-     cexx = cex + ubcx*(t-ifirst*dt)
-     ceyy = cey + ubcy*(t-ifirst*dt)
-  else
-     cexx = cex
-     ceyy = cey
-  endif
+
+  integer, intent(in) :: j
+  real(mytype), intent(in) :: x_pos
+  real(mytype), intent(out) :: ana_res
+
+  real(mytype) :: cexx,ceyy
+
+  ! Ajout CF moving cylinder
+  ! Update center of moving Cylinder
+  ! WARNING: this is not compatible with RK time schemes
+  cexx = get_cyl_xpos(max(0._mytype, t-ifirst*dt))
+  ceyy = get_cyl_ypos(max(0._mytype, t-ifirst*dt))
+
   if (x_pos.gt.cexx) then     ! Impose analytical BC
       ana_res = cexx + sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
   else
       ana_res = cexx - sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
   endif     
-  !
-  return
+
 end subroutine ana_x_cyl
 !*******************************************************************
 SUBROUTINE analitic_x(j,x_pos,ana_res,k)

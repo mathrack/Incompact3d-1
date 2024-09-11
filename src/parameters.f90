@@ -67,7 +67,10 @@ subroutine parameter(input_i3d)
   NAMELIST /AdversePresGrad/ APG,APG_DpDX,APG_Beta
   NAMELIST /ProbeSpectra/ Pro_Spectra,X_Pro_Spectra,Z_Pro_Spectra
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
-  NAMELIST /ibmstuff/ cex,cey,cez,ra,rai,rao,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega ,ubcx,ubcy,ubcz,rads, c_air
+  NAMELIST /ibmstuff/ cex,cey,cez,ra,rai,rao,nobjmax,nraf,nvol,iforces, &
+       npif, izap, ianal, imove, thickness, chord, omega, ubcx, ubcy, ubcz, &
+       rads, c_air, &
+       cyl_oscil, cyl_period, cyl_amp ! Ajout CF moving cylinder
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
        Fr, ibirman_eos
@@ -727,6 +730,9 @@ subroutine parameter_defaults()
   ubcx = zero
   ubcy = zero
   ubcz = zero
+  cyl_oscil = .false.    ! Ajout CF moving cylinder
+  cyl_period = 0._mytype ! Ajout CF moving cylinder
+  cyl_amp = 0._mytype    ! Ajout CF moving cylinder
 
   nvol = 0
   iforces = 0
