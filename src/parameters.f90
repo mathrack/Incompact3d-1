@@ -124,6 +124,11 @@ subroutine parameter(input_i3d)
   read(10, nml=Statistics); rewind(10)
   if (iibm.ne.0) then
      read(10, nml=ibmstuff); rewind(10)
+     ! Ajout CF moving cylinder
+     ! Safety check
+     if (cyl_oscil) then
+        if (abs(cyl_period) < dt) call decomp_2d_abort(1, "Invalid value for cyl_period")
+     end if
   endif
   if (nprobes.gt.0) then
      call setup_probes()
