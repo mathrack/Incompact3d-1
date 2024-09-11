@@ -224,12 +224,9 @@ contains
     else
        dyraf =yly/real(nyraf-1, mytype)
     endif
-    do j=1,ny-1
-       do jraf=1,nraf
-          ypraf(jraf+nraf*(j-1))=yp(j)+real(jraf-1, mytype)*(yp(j+1)-yp(j))/real(nraf, mytype)
-       enddo
+    do j=1,nyraf
+       ypraf(j) = (j-1) * dyraf
     enddo
-    if(.not.ncly)ypraf(nyraf)=yp(ny)
     yepsi=zero
     call geomcomplex(yepsi,ystart(1),yend(1),nyraf,1,nyraf,ystart(3),yend(3),dx,ypraf,dz,one)
     ! if (nrank==0) print*,'    step 3'
