@@ -134,8 +134,8 @@ izap=1         ! How many points to skip for reconstruction (Range: 0-3) (Reccom
 ianal=0        ! Boundary position approximation? (0: Refinement Approximation, 1: Analytical)
 
 cyl_oscil = T     ! Default is false. Set to true to replace translation with oscillating motion. imove=1 is required
-cyl_period = 0.04 ! Period of the imposed oscillation
-cyl_amp = 1.1     ! Amplitude of the imposed oscillation
+cyl_period = 1.0  ! Period of the imposed oscillation
+cyl_amp = 0.2     ! Amplitude of the imposed oscillation
 /End
 
 &ForceCVs
