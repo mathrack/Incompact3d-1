@@ -13,6 +13,7 @@ module moving_cylinder
 
   use decomp_2d_constants, only : mytype
   use decomp_2d_mpi, only : nrank, decomp_2d_abort
+  use param, only : twopi
   use ibm_param, only : cex, cey, ubcx, ubcy, cyl_oscil, cyl_period, cyl_amp
 
   implicit none
@@ -59,7 +60,7 @@ contains
     get_cyl_ypos = cey
     if (time > 0._mytype) then
       if (cyl_oscil) then
-        get_cyl_ypos = get_cyl_ypos + cyl_amp * sin(cyl_period * time)                     
+        get_cyl_ypos = get_cyl_ypos + cyl_amp * sin(twopi * time / cyl_period)                     
       else
         get_cyl_ypos = get_cyl_ypos + ubcy * time                                          
       end if
@@ -98,7 +99,7 @@ contains
     real(mytype) :: get_cyl_yvel
 
     if (cyl_oscil) then
-      get_cyl_yvel = cyl_amp * cyl_period * cos(cyl_period * time)
+      get_cyl_yvel = cyl_amp * (twopi / cyl_period) * cos(twopi * time / cyl_period)
     else
       get_cyl_yvel = ubcy
     end if
