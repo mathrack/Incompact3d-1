@@ -72,8 +72,8 @@ itimescheme = 3       ! Time integration scheme (1->Euler,2->AB2, 3->AB3, 4->AB4
 
 ! Basic I/O
 irestart = 0           ! Read initial flow field ?
-icheckpoint = 100      ! Frequency for writing backup file
-ioutput = 50           ! Frequency for visualization
+icheckpoint = 10000    ! Frequency for writing backup file
+ioutput = 10           ! Frequency for visualization
 ilist    = 25          ! Frequency for the output to screen
 nvisu = 1              ! Size for visualisation collection
 
@@ -134,7 +134,7 @@ izap=1         ! How many points to skip for reconstruction (Range: 0-3) (Reccom
 ianal=0        ! Boundary position approximation? (0: Refinement Approximation, 1: Analytical)
 
 cyl_oscil = T     ! Default is false. Set to true to replace translation with oscillating motion. imove=1 is required
-cyl_period = 1.0  ! Period of the imposed oscillation
+cyl_period = 0.75 ! Period of the imposed oscillation
 cyl_amp = 0.2     ! Amplitude of the imposed oscillation
 /End
 

@@ -988,9 +988,9 @@ subroutine ana_y_cyl(i,y_pos,ana_res)
   ceyy = get_cyl_ypos(max(0._mytype, t-ifirst*dt))
 
   if (y_pos.gt.ceyy) then     ! Impose analytical BC
-      ana_res=ceyy + sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
+      ana_res=ceyy + sqrt(ra**2-((i+ystart(1)-1-1)*dx-cexx)**2)
   else
-      ana_res=ceyy - sqrt(ra**2.0-((i+ystart(1)-1-1)*dx-cexx)**2.0)
+      ana_res=ceyy - sqrt(ra**2-((i+ystart(1)-1-1)*dx-cexx)**2)
   endif     
 
 end subroutine ana_y_cyl
@@ -1020,9 +1020,9 @@ subroutine ana_x_cyl(j,x_pos,ana_res)
   ceyy = get_cyl_ypos(max(0._mytype, t-ifirst*dt))
 
   if (x_pos.gt.cexx) then     ! Impose analytical BC
-      ana_res = cexx + sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
+      ana_res = cexx + sqrt(ra**2-(yp(j+xstart(2)-1)-ceyy)**2)
   else
-      ana_res = cexx - sqrt(ra**2.0-(yp(j+xstart(2)-1)-ceyy)**2.0)
+      ana_res = cexx - sqrt(ra**2-(yp(j+xstart(2)-1)-ceyy)**2)
   endif     
 
 end subroutine ana_x_cyl

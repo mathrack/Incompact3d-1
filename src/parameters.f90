@@ -595,6 +595,10 @@ subroutine parameter(input_i3d)
        write(*,"(' nraf                   : ',I17)") nraf
        write(*,"(' nobjmax                : ',I17)") nobjmax
      end if
+     ! Ajout CF moving cylinder
+     if (iibm > 0 .and. cyl_oscil) then
+       write(*,*) "Imposed oscillation : ", cyl_period, cyl_amp
+     endif
      write(*,*) '==========================================================='
      write(*,"(' Boundary condition velocity field: ')")
      write(*,"(' nclx1, nclxn           : ',I15,',',I1 )") nclx1,nclxn
