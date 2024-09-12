@@ -521,7 +521,8 @@ subroutine cubsplx(u,lind)
               endif
               ! Special Case
               if (xi(i,j,k).eq.xf(i,j,k)) then
-                  u(i,j,k)=bcimp                                   
+                  ipol = min(nx,max(1,1+int(xi(i,j,k)/dx)))
+                  u(ipol,j,k)=bcimp                                   
               else
               ! Cubic Spline Reconstruction
 		  na=ia
@@ -688,7 +689,8 @@ subroutine cubsply(u,lind)
               endif
               ! Special Case
               if (yi(j,i,k).eq.yf(j,i,k)) then
-                  u(i,j,k)=bcimp                                   
+                  jpol = min(ny,max(1,int(1+yi(j,i,k)/dy)))
+                  u(i,jpol,k)=bcimp                                   
               else
 		  !calcul du polynôme
 		   na=ia
