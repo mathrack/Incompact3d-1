@@ -61,7 +61,7 @@ contains
        if (abs(ym-ceyy) > rlim) cycle
        r2y=(ym-ceyy)**2
        do i=nxi,nxf
-          xm=real(i-1+nxi-1,mytype)*dx
+          xm=real(i-1,mytype)*dx
           if (abs(xm-cexx) > rlim) cycle
           r2x=(xm-cexx)**2
           if (r2x > r2lim-r2y) cycle
