@@ -5,7 +5,7 @@
 module ibm
 
   use decomp_2d_constants
-  use decomp_2d_mpi, only : nrank
+  use decomp_2d_mpi, only : nrank, decomp_2d_warning
 
   public
 
