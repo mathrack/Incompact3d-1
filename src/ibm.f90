@@ -522,6 +522,7 @@ subroutine cubsplx(u,lind)
               ! Special Case
               if (xi(i,j,k).eq.xf(i,j,k)) then
                   ipol = min(nx,max(1,1+int(xi(i,j,k)/dx)))
+                  call decomp_2d_warning(ipol, "Validation needed for the special case in x")
                   u(ipol,j,k)=bcimp                                   
               else
               ! Cubic Spline Reconstruction
@@ -690,6 +691,7 @@ subroutine cubsply(u,lind)
               ! Special Case
               if (yi(j,i,k).eq.yf(j,i,k)) then
                   jpol = min(ny,max(1,int(1+yi(j,i,k)/dy)))
+                  call decomp_2d_warning(jpol, "Validation needed for the special case in y")
                   u(i,jpol,k)=bcimp                                   
               else
 		  !calcul du polynôme
