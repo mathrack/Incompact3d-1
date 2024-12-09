@@ -276,8 +276,6 @@ module variables
   real(mytype),allocatable,dimension(:) :: ppy,pp2y,pp4y
   real(mytype),allocatable,dimension(:) :: ppyi,pp2yi,pp4yi
   real(mytype),allocatable,dimension(:) :: xp,xpi,yp,ypi,dyp,zp,zpi,del,ypw
-  real(mytype),allocatable,dimension(:) :: yeta,yetai
-  real(mytype) :: alpha,beta
 
 end module variables
 !############################################################################
@@ -332,7 +330,7 @@ module param
   real(mytype) :: C_filter
   character(len=512) :: inflowpath
   logical :: validation_restart
-  logical :: mhd_active
+  logical :: mhd_active,particle_active
 
   ! Logical, true when synchronization is needed
   logical, save :: sync_vel_needed = .true.

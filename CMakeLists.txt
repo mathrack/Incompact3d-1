@@ -68,5 +68,3 @@ endif (${BUILD_TESTING})
 # Add a prettify target
 #add_custom_target(format sh ${CMAKE_SOURCE_DIR}/scripts/format.sh
 #  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-

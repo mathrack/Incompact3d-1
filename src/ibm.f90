@@ -403,6 +403,7 @@ subroutine cubsplx(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
+  USE decomp_2d_mpi, only : decomp_2d_abort
   !
   implicit none
   !
@@ -521,9 +522,8 @@ subroutine cubsplx(u,lind)
               endif
               ! Special Case
               if (xi(i,j,k).eq.xf(i,j,k)) then
-                  ipol = min(nx,max(1,1+int(xi(i,j,k)/dx)))
-                  call decomp_2d_warning(ipol, "Validation needed for the special case in x")
-                  u(ipol,j,k)=bcimp                                   
+                 call decomp_2d_abort(1, "!! situation not supported by the IBM !!")
+                 !u(ipol,j,k)=bcimp                                   
               else
               ! Cubic Spline Reconstruction
                  na=ia
@@ -563,6 +563,7 @@ subroutine cubsply(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
+  USE decomp_2d_mpi, only : decomp_2d_abort
   !
   implicit none
   !
@@ -690,9 +691,8 @@ subroutine cubsply(u,lind)
               endif
               ! Special Case
               if (yi(j,i,k).eq.yf(j,i,k)) then
-                  jpol = min(ny,max(1,int(1+yi(j,i,k)/dy)))
-                  call decomp_2d_warning(jpol, "Validation needed for the special case in y")
-                  u(i,jpol,k)=bcimp                                   
+                 call decomp_2d_abort(1, "!! situation not supported by the IBM !!")
+                 !u(i,jpol,k)=bcimp                                   
               else
                  !calcul du polynôme
                  na=ia
@@ -728,6 +728,7 @@ subroutine cubsplz(u,lind)
   USE decomp_2d
   USE variables
   USE ibm_param
+  USE decomp_2d_mpi, only : decomp_2d_abort
   !
   implicit none
   !
@@ -841,28 +842,29 @@ subroutine cubsplz(u,lind)
                     endif
                  enddo
               endif
-              !     ! Special Case
-              !     if (zi(k,i,j).eq.zf(k,i,j)) then
-              !         u(i,j,kpol)=bcimp                                   
-              !     else              
+              ! Special Case
+              if (zi(k,i,j).eq.zf(k,i,j)) then
+                 !u(i,j,kpol)=bcimp
+                 call decomp_2d_abort(1, "!! situation not supported by the IBM !!")
+              else              
               ! Cubic Spline Reconstruction
-              na=ia
-              do kpol=kpoli,kpolf 
+                 na=ia
+                 do kpol=kpoli,kpolf 
                  ! Special Case
-                 if (zi(k,i,j).eq.zf(k,i,j)) then
-                    u(i,j,kpol)=bcimp
-                 else
-                    if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Front to the Back (Special Case)
-                       u(i,j,kpol)=bcimp                            
-                    else              
-                       xpol=dz*(kpol-1)
-                       call cubic_spline(xa,ya,na,xpol,ypol)
-                       u(i,j,kpol)=ypol
+                    if (zi(k,i,j).eq.zf(k,i,j)) then
+                       u(i,j,kpol)=bcimp
+                    else
+                       if ((inxf.eq.1).and.(inxi.eq.1)) then ! If the Body Extends from the Front to the Back (Special Case)
+                          u(i,j,kpol)=bcimp                            
+                       else              
+                          xpol=dz*(kpol-1)
+                          call cubic_spline(xa,ya,na,xpol,ypol)
+                          u(i,j,kpol)=ypol
+                       endif
                     endif
-                 endif
-              enddo
-              ia=0
-              !     endif
+                 enddo
+                 ia=0
+              endif
            enddo
         endif
      enddo

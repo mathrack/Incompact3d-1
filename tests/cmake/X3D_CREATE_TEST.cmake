@@ -1,10 +1,17 @@
 macro(CreateMPITest test_dir
 		 case
-		 input_file)
-  message(STATUS "Add Test ${case}")
+		 input_file
+		 additional_files)
+  message(STATUS "Add Verification Test (MPI run) ${case}")
   set(case_dir "${test_dir}/${case}")
   file(MAKE_DIRECTORY ${case_dir})
   file(COPY ${input_file} DESTINATION ${case_dir})
+  set(local_list "")
+  list(APPEND local_list ${additional_files})
+  foreach(ff IN LISTS local_list)
+    message(STATUS "${ff}")
+    file(COPY ${ff} DESTINATION ${case_dir})
+  endforeach()
   if(ADIOS2_FOUND)
     file(COPY adios2_config.xml DESTINATION ${case_dir})
   endif()
@@ -18,7 +25,7 @@ macro(CreateMPIPythonTest
 		 PyScript
 		 ResuFile)
   # Test main param
-  message(STATUS "Add Test ${case}")
+  message(STATUS "Add Validation Test (MPI run + Python verification) ${case}")
   set(case_dir "${test_dir}/${case}")
   file(MAKE_DIRECTORY ${case_dir})
   file(COPY ${input_file} DESTINATION ${case_dir})

@@ -19,6 +19,7 @@ program xcompact3d
   use mhd,    only : Bm,mhd_equation,test_magnetic, &
                      solve_poisson_mhd
   use param, only : mhd_active
+  use particle, only : intt_particles
   use forces, only : iforces, forces_unst
 
   implicit none
@@ -90,6 +91,10 @@ program xcompact3d
 
      enddo !! End sub timesteps
 
+     if(particle_active) then
+       call intt_particles(ux1,uy1,uz1,t)
+     endif
+
      call restart(ux1,uy1,uz1,dux1,duy1,duz1,ep1,pp3(:,:,:,1),phi1,dphi1,px1,py1,pz1,rho1,drho1,mu1,1)
 
      call simu_stats(3)
@@ -139,6 +144,7 @@ subroutine init_xcompact3d()
   use probes, only : init_probes
 
   use mhd, only: mhd_init
+  use particle,  only : particle_report,local_domain_size
 
   implicit none
 
@@ -217,6 +223,15 @@ subroutine init_xcompact3d()
   !####################################################################
   ! initialise mhd
   if (mhd_active) call mhd_init()
+
+  !####################################################################
+  ! initialise particles
+  if (particle_active) then
+    call particle_report('input')
+
+    call local_domain_size
+  endif
+
 
   !####################################################################
   ! initialise visu
@@ -354,19 +369,19 @@ subroutine check_transients()
   
   implicit none
 
-  real(mytype) :: dep, dep1
+  real(mytype) :: dep
   integer :: code
    
   dep=maxval(abs(dux1))
-  call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-  if (nrank == 0) write(*,*)'## MAX dux1 ', dep1
+  call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+  if (nrank == 0) write(*,*)'## MAX dux1 ', dep
  
   dep=maxval(abs(duy1))
-  call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-  if (nrank == 0) write(*,*)'## MAX duy1 ', dep1
+  call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+  if (nrank == 0) write(*,*)'## MAX duy1 ', dep
  
   dep=maxval(abs(duz1))
-  call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
-  if (nrank == 0) write(*,*)'## MAX duz1 ', dep1
+  call MPI_ALLREDUCE(MPI_IN_PLACE,dep,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
+  if (nrank == 0) write(*,*)'## MAX duz1 ', dep
   
 end subroutine check_transients
