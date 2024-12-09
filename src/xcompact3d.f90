@@ -19,6 +19,7 @@ program xcompact3d
   use mhd,    only : Bm,mhd_equation,test_magnetic, &
                      solve_poisson_mhd
   use param, only : mhd_active
+  use forces, only : iforces, forces_unst
 
   implicit none
 
@@ -55,6 +56,7 @@ program xcompact3d
           endif
         endif
         call calculate_transeq_rhs(drho1,dux1,duy1,duz1,dphi1,rho1,ux1,uy1,uz1,ep1,phi1,divu3)
+        if (iforces.eq.1) call forces_unst(dux1,duy1,px1,py1,gdt(itr))
 
 #ifdef DEBG
         call check_transients()
@@ -210,12 +212,7 @@ subroutine init_xcompact3d()
      call body(ux1,uy1,uz1,ep1)
   endif
 
-  if (iforces.eq.1) then
-     call init_forces()
-     if (irestart==1) then
-        call restart_forces(0)
-     endif
-  endif
+  if (iforces.eq.1) call init_forces()
 
   !####################################################################
   ! initialise mhd
