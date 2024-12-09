@@ -58,9 +58,9 @@ contains
     real(mytype) :: get_cyl_ypos                                                           
                                                                                            
     get_cyl_ypos = cey
-    if (time > 0._mytype) then
+    if (time >= 0._mytype) then
       if (cyl_oscil) then
-        get_cyl_ypos = get_cyl_ypos + cyl_amp * sin(twopi * time / cyl_period)                     
+        get_cyl_ypos = get_cyl_ypos + cyl_amp * sin(twopi * (time / cyl_period + 1._mytype/4._mytype))
       else
         get_cyl_ypos = get_cyl_ypos + ubcy * time                                          
       end if
@@ -99,7 +99,7 @@ contains
     real(mytype) :: get_cyl_yvel
 
     if (cyl_oscil) then
-      get_cyl_yvel = cyl_amp * (twopi / cyl_period) * cos(twopi * time / cyl_period)
+      get_cyl_yvel = cyl_amp * (twopi / cyl_period) * cos(twopi * (time / cyl_period + 1._mytype/4._mytype))
     else
       get_cyl_yvel = ubcy
     end if
