@@ -24,7 +24,7 @@ contains
 
   subroutine geomcomplex_cyl(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dx,yp,remp)
 
-    use ibm_param, only : cex, cey, ubcx, ubcy, ra
+    use ibm_param, only : ubcx, ubcy, ra
     use moving_cylinder, only : get_cyl_xpos, get_cyl_ypos ! Ajout CF moving cylinder
 
     implicit none
