@@ -321,6 +321,7 @@ subroutine finalise_xcompact3d()
   use mhd, only: mhd_fin
   use case, only: visu_case_finalise
   use forces, only: iforces
+  use moving_cylinder, only : moving_cylinder_fin
 
   implicit none
 

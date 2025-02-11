@@ -34,6 +34,7 @@ subroutine parameter(input_i3d)
 
   use mhd, only : mhd_equation,hartmann,stuart,rem
   use particle, only : initype_particle,n_particles,bc_particle,particle_inject_period
+  use moving_cylinder, only : moving_cylinder_init
 
   implicit none
 
@@ -131,6 +132,12 @@ subroutine parameter(input_i3d)
      ! Safety check
      if (cyl_oscil) then
         if (abs(cyl_period) < dt) call decomp_2d_abort(1, "Invalid value for cyl_period")
+     end if
+     ! When cyl_period < 0, imposed motion using experimental data
+     if (cyl_period < 0._mytype) then
+        call moving_cylinder_init("cyl_data.txt")
+     else
+        call moving_cylinder_init()
      end if
   endif
   if (nprobes.gt.0) then
