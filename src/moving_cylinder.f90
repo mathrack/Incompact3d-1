@@ -229,7 +229,7 @@ contains
     i1 = max(i1, size(data,2)-1)
 
     ! Linear interpolation
-    interpolate = data(iy,i1) + (data(iy,i1+1)-data(iy,i1)) * (x-data(ix,1)) / (data(ix,i1+1)-data(ix,i1))
+    interpolate = data(iy,i1) + (data(iy,i1+1)-data(iy,i1)) * (x-data(ix,i1)) / (data(ix,i1+1)-data(ix,i1))
 
   end function interpolate
 
