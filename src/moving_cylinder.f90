@@ -12,6 +12,7 @@
 module moving_cylinder
 
   use MPI
+  use, intrinsic :: iso_fortran_env, only: real32
   use decomp_2d_constants, only : mytype, real_type
   use decomp_2d_mpi, only : nrank, decomp_2d_abort
   use param, only : twopi
@@ -20,6 +21,7 @@ module moving_cylinder
   implicit none
 
   logical, save :: pos_vel_from_expe
+  logical, parameter :: debug = .true.
   real(mytype), dimension(:,:), allocatable, save :: cyl_data
 
   private ! All functions/subroutines private by default
@@ -41,7 +43,6 @@ contains
     character(len=*), intent(in), optional :: filename
 
     ! Local variables
-    logical, parameter :: debug = .true.
     integer :: iounit, i, n, code
 
     ! Define the flag for experimental data
@@ -50,6 +51,7 @@ contains
     else
       pos_vel_from_expe = .false.
     end if
+    if (debug) write(*,*) "DEBUG. Moving cylinder, CPU ", nrank, " expe ", pos_vel_from_expe
 
     ! Allocate memory and read data if needed
     if (pos_vel_from_expe) then
@@ -82,7 +84,7 @@ contains
           close(iounit)
        end if
        call MPI_BCAST(cyl_data, 3*n, real_type, 0, MPI_COMM_WORLD,code)
-       if (debug) write(*,*) "DEBUG. Moving cylinder, CPU ", nrank, " data ", cyl_data(:,1:2) ! This can be removed later
+       if (debug) write(*,*) "DEBUG. Moving cylinder, CPU ", nrank, " data ", real(cyl_data(:,1:2), kind=real32) ! This can be removed later
 
     end if
 
@@ -134,7 +136,8 @@ contains
     real(mytype) :: get_cyl_ypos                                                           
 
     if (pos_vel_from_expe) then
-       get_cyl_ypos = interpolate(cyl_data, 1, time, 2)
+       get_cyl_ypos = cey + interpolate(cyl_data, 1, time, 2)
+       if (debug) write(*,*) "DEBUG. Moving cylinder, CPU ", nrank, " position ", real(get_cyl_ypos, kind=real32) ! This can be removed later
        return
     end if
 
@@ -181,6 +184,7 @@ contains
 
     if (pos_vel_from_expe) then
        get_cyl_yvel = interpolate(cyl_data, 1, time, 3)
+       if (debug) write(*,*) "DEBUG. Moving cylinder, CPU ", nrank, " velocity ", real(get_cyl_yvel, kind=real32) ! This can be removed later
        return
     end if
 
